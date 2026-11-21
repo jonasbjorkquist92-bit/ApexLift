@@ -1,0 +1,2723 @@
+<!DOCTYPE html>
+<html lang="sv" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ApexLift — Gym Tracker, Progression &amp; Workout Optimizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-app: #020617;
+      --bg-card: #0f172a;
+      --bg-sub: #1e293b;
+      --border-main: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-contrast: #ffffff;
+      --chart-line: #3b82f6;
+      --chart-fill: rgba(59, 130, 246, 0.16);
+      --chart-grid: rgba(148, 163, 184, 0.12);
+    }
+
+    html[data-theme="obsidian"] {
+      --bg-app: #020617;
+      --bg-card: #0f172a;
+      --bg-sub: #1e293b;
+      --border-main: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-contrast: #ffffff;
+      --chart-line: #3b82f6;
+      --chart-fill: rgba(59, 130, 246, 0.18);
+      --chart-grid: rgba(148, 163, 184, 0.12);
+    }
+
+    html[data-theme="light"] {
+      --bg-app: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-sub: #e2e8f0;
+      --border-main: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --accent: #2563eb;
+      --accent-contrast: #ffffff;
+      --chart-line: #2563eb;
+      --chart-fill: rgba(37, 99, 235, 0.14);
+      --chart-grid: rgba(15, 23, 42, 0.08);
+    }
+
+    html[data-theme="crimson"] {
+      --bg-app: #09090b;
+      --bg-card: #141417;
+      --bg-sub: #222227;
+      --border-main: #27272a;
+      --text-main: #fafafa;
+      --text-muted: #a1a1aa;
+      --accent: #ef4444;
+      --accent-contrast: #ffffff;
+      --chart-line: #ef4444;
+      --chart-fill: rgba(239, 68, 68, 0.18);
+      --chart-grid: rgba(161, 161, 170, 0.12);
+    }
+
+    html[data-theme="mint"] {
+      --bg-app: #040d0a;
+      --bg-card: #0b1914;
+      --bg-sub: #132a22;
+      --border-main: #1a382e;
+      --text-main: #ecfdf5;
+      --text-muted: #94b8ab;
+      --accent: #10b981;
+      --accent-contrast: #022c22;
+      --chart-line: #10b981;
+      --chart-fill: rgba(16, 185, 129, 0.18);
+      --chart-grid: rgba(148, 184, 171, 0.12);
+    }
+
+    html[data-theme="gold"] {
+      --bg-app: #0a0908;
+      --bg-card: #161412;
+      --bg-sub: #24201c;
+      --border-main: #2e2924;
+      --text-main: #fafaf9;
+      --text-muted: #a8a29e;
+      --accent: #f59e0b;
+      --accent-contrast: #1c1917;
+      --chart-line: #f59e0b;
+      --chart-fill: rgba(245, 158, 11, 0.18);
+      --chart-grid: rgba(168, 162, 158, 0.12);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      transition: background-color 0.2s ease, color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .themed-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-main);
+    }
+
+    .themed-sub {
+      background-color: var(--bg-sub);
+      border-color: var(--border-main);
+    }
+
+    .themed-muted {
+      color: var(--text-muted);
+    }
+
+    .themed-accent-bg {
+      background-color: var(--accent);
+      color: var(--accent-contrast);
+    }
+
+    .themed-accent-text {
+      color: var(--accent);
+    }
+
+    /* Hide native number spinners for cleaner mobile touch steppers */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    html[data-theme="light"] .text-white { color: #0f172a !important; }
+    html[data-theme="light"] .text-slate-200 { color: #1e293b !important; }
+    html[data-theme="light"] .text-slate-300 { color: #334155 !important; }
+    html[data-theme="light"] .text-slate-400 { color: #475569 !important; }
+    html[data-theme="light"] .bg-slate-950 { background-color: #f8fafc !important; }
+    html[data-theme="light"] .bg-slate-900 { background-color: #ffffff !important; }
+    html[data-theme="light"] .bg-slate-800 { background-color: #e2e8f0 !important; }
+    html[data-theme="light"] .border-slate-800,
+    html[data-theme="light"] .border-slate-700 { border-color: #cbd5e1 !important; }
+    html[data-theme="light"] .themed-accent-bg .text-white,
+    html[data-theme="light"] .themed-accent-bg { color: #ffffff !important; }
+  </style>
+</head>
+<body class="min-h-screen pb-28 lg:pb-12 antialiased">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 themed-card border-b backdrop-blur-md bg-opacity-95">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <!-- Brand -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-9 h-9 rounded-xl themed-accent-bg flex items-center justify-center shadow-md">
+          <i data-lucide="dumbbell" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="text-base font-extrabold tracking-tight block leading-none">ApexLift</span>
+          <span data-i18n="brandSub" class="text-[10px] font-semibold uppercase tracking-wider themed-muted hidden sm:block">Precision Strength</span>
+        </div>
+      </div>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden lg:flex items-center gap-1 p-1 rounded-xl themed-sub border">
+        <button onclick="switchTab('dashboard')" data-nav="dashboard" data-i18n="navDashboard" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">Dashboard</button>
+        <button onclick="switchTab('optimizer')" data-nav="optimizer" data-i18n="navOptimizer" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">Optimizer</button>
+        <button onclick="switchTab('logger')" data-nav="logger" data-i18n="navLogger" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">Workout Logger</button>
+        <button onclick="switchTab('history')" data-nav="history" data-i18n="navHistory" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">History &amp; Data</button>
+        <button onclick="switchTab('glossary')" data-nav="glossary" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          <i data-lucide="book-open" class="w-3.5 h-3.5"></i> <span data-i18n="navGlossary">Glossary</span>
+        </button>
+      </nav>
+
+      <!-- Right Controls: Language Switcher + Theme Switcher + Trial + Log -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Bilingual Language Switcher (SV / EN) -->
+        <div class="flex items-center p-0.5 rounded-xl themed-sub border text-[11px] font-extrabold" title="Byt språk / Switch Language">
+          <button type="button" onclick="setLanguage('sv')" id="lang-btn-sv" class="px-2 py-1 rounded-lg transition">SV</button>
+          <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="px-2 py-1 rounded-lg transition">EN</button>
+        </div>
+
+        <!-- Theme Swatches -->
+        <div class="flex items-center gap-1 px-2 py-1.5 rounded-xl themed-sub border" title="Theme">
+          <button type="button" onclick="setTheme('obsidian')" data-theme-btn="obsidian" title="Obsidian Blue" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-blue-500 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('light')" data-theme-btn="light" title="Arctic Light" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-slate-100 border border-slate-400 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('crimson')" data-theme-btn="crimson" title="Midnight Crimson" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-red-500 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('mint')" data-theme-btn="mint" title="Cyber Mint" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-400 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('gold')" data-theme-btn="gold" title="Royal Gold" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-amber-400 ring-offset-2 ring-offset-slate-900 transition"></button>
+        </div>
+
+        <button onclick="launchSampleTrialWorkout()" class="px-2.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-extrabold text-amber-400 flex items-center gap-1 transition">
+          <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i>
+          <span data-i18n="headerTrial" class="hidden md:inline">Trial</span>
+        </button>
+
+        <button onclick="switchTab('logger')" class="px-2.5 sm:px-3 py-2 rounded-xl themed-accent-bg text-xs font-extrabold flex items-center gap-1 shadow-md hover:opacity-90 transition">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i>
+          <span data-i18n="headerLog" class="hidden sm:inline">Log</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE BOTTOM NAV (Large Touch Targets) -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 themed-card border-t px-1 py-1.5 flex items-center justify-around shadow-2xl">
+    <button onclick="switchTab('dashboard')" data-nav="dashboard" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span data-i18n="navDashboardShort">Stats</span>
+    </button>
+    <button onclick="switchTab('optimizer')" data-nav="optimizer" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="sparkles" class="w-4 h-4"></i> <span data-i18n="navOptimizer">Optimizer</span>
+    </button>
+    <button onclick="switchTab('logger')" data-nav="logger" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[62px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="plus-circle" class="w-4 h-4"></i> <span data-i18n="navLoggerShort">Log</span>
+    </button>
+    <button onclick="switchTab('history')" data-nav="history" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="history" class="w-4 h-4"></i> <span data-i18n="navHistoryShort">History</span>
+    </button>
+    <button onclick="switchTab('glossary')" data-nav="glossary" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="book-open" class="w-4 h-4"></i> <span data-i18n="navGlossary">Glossary</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-5 space-y-5">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-view space-y-5">
+      <!-- Sandbox Trial Callout Strip -->
+      <div class="themed-card border border-amber-500/40 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-start sm:items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/35 flex items-center justify-center text-amber-400 shrink-0">
+            <i data-lucide="flask-conical" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-xs font-extrabold flex flex-wrap items-center gap-2">
+              <span data-i18n="trialBannerTitle">Want to test logging &amp; Smart Rest Timer first?</span>
+              <span data-i18n="trialZeroImpact" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">Zero Impact on Stats</span>
+            </div>
+            <p data-i18n="trialBannerDesc" class="text-[11px] themed-muted mt-0.5">Launch a sandbox trial workout with pre-loaded sets without affecting your real PRs or charts.</p>
+          </div>
+        </div>
+        <button type="button" onclick="launchSampleTrialWorkout()" class="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shrink-0 transition">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i> <span data-i18n="trialStartBtn">Start Trial Workout</span>
+        </button>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span data-i18n="kpiSessions">Real Sessions</span>
+            <i data-lucide="calendar-check" class="w-4 h-4 themed-accent-text"></i>
+          </div>
+          <div id="kpi-workouts" class="text-2xl font-extrabold font-mono mt-2">0</div>
+          <div data-i18n="kpiSessionsSub" class="text-[11px] themed-muted mt-1">Excludes Sandbox Trials</div>
+        </div>
+
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span class="flex items-center gap-1"><span data-i18n="kpiTonnage">Tonnage</span> <button onclick="openGlossaryTerm('tonnage')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button></span>
+            <i data-lucide="weight" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div id="kpi-tonnage" class="text-2xl font-extrabold font-mono mt-2">0 kg</div>
+          <div data-i18n="kpiTonnageSub" class="text-[11px] themed-muted mt-1">Working sets + BW</div>
+        </div>
+
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span id="kpi-actual-pr-label" class="truncate">Selected Lift Max PR</span>
+            <i data-lucide="trophy" class="w-4 h-4 text-amber-400 shrink-0"></i>
+          </div>
+          <div id="kpi-actual-pr" class="text-2xl font-extrabold font-mono mt-2">—</div>
+          <div id="kpi-working-pr" class="text-[11px] themed-muted mt-1">Best working: —</div>
+        </div>
+
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span class="flex items-center gap-1"><span data-i18n="kpiE1rm">Est. 1RM</span> <button onclick="openGlossaryTerm('e1rm')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button></span>
+            <i data-lucide="trending-up" class="w-4 h-4 text-violet-400"></i>
+          </div>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span id="kpi-e1rm" class="text-2xl font-extrabold font-mono">—</span>
+            <span id="kpi-rel-strength" class="text-xs font-extrabold font-mono text-emerald-400"></span>
+          </div>
+          <div data-i18n="kpiE1rmSub" class="text-[11px] themed-muted mt-1">Brzycki &le;8 reps (1 rep = exact)</div>
+        </div>
+      </div>
+
+      <!-- Bodyweight & Relative Strength Card -->
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <i data-lucide="scale" class="w-4 h-4 text-emerald-400"></i>
+            <h2 data-i18n="bwTitle" class="text-sm font-extrabold">Bodyweight &amp; Relative Strength (&times; BW)</h2>
+            <button onclick="openGlossaryTerm('relative-strength')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button>
+          </div>
+          <p data-i18n="bwDesc" class="text-xs themed-muted">Used to calculate relative strength ratios (e.g. 1.15&times; BW) and total load on Pull-Ups &amp; Dips.</p>
+          <div id="bw-latest-summary" class="text-xs font-mono font-bold text-emerald-400 pt-1"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="date" id="bw-date-input" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold" />
+          <div class="flex items-center gap-1">
+            <input type="number" step="0.1" id="bw-weight-input" placeholder="80.0" class="w-24 px-3 py-2 rounded-xl themed-sub border font-mono text-xs font-extrabold text-center" />
+            <span class="text-xs font-bold themed-muted">kg</span>
+          </div>
+          <button type="button" onclick="logBodyweightEntry()" class="px-3.5 py-2 rounded-xl themed-accent-bg text-xs font-extrabold flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="bwLogBtn">Log BW</span>
+          </button>
+          <div id="bw-sparkline-pills" class="flex items-center gap-1 overflow-x-auto max-w-full"></div>
+        </div>
+      </div>
+
+      <!-- Progression Chart + Weekly Hypertrophy Volume -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 themed-card border rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 data-i18n="chartTitle" class="text-base font-extrabold">Lift Progression &amp; PR Curve</h2>
+              <p data-i18n="chartSub" class="text-xs themed-muted">Track actual top weight or conservative Brzycki e1RM over time</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="dash-category-filter" onchange="populateExerciseDropdown(); renderDashboard();" class="px-2.5 py-2 rounded-xl themed-sub border text-xs font-bold">
+                <option value="ALL" data-i18n="filterAllEq">All Equipment</option>
+                <option value="Free Weight">Free Weight</option>
+                <option value="Smith Machine">Smith Machine</option>
+                <option value="Machine / Cable">Machine / Cable</option>
+                <option value="Bodyweight">Bodyweight</option>
+              </select>
+              <select id="dash-exercise-select" onchange="renderDashboard()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold max-w-[220px]"></select>
+              <select id="dash-pause-filter" onchange="renderDashboard()" class="px-2.5 py-2 rounded-xl themed-sub border text-xs font-bold">
+                <option value="all" data-i18n="filterAllSets">All Sets</option>
+                <option value="nopause" data-i18n="filterNoPause">No-Pause</option>
+                <option value="paused" data-i18n="filterPaused">Paused Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button onclick="setChartMetric('maxWeight')" id="metric-btn-maxWeight" data-i18n="metricMaxWt" class="px-3 py-1.5 rounded-lg text-xs font-bold themed-accent-bg">Actual Max Weight</button>
+            <button onclick="setChartMetric('e1rm')" id="metric-btn-e1rm" data-i18n="metricE1rm" class="px-3 py-1.5 rounded-lg text-xs font-bold themed-sub">Est. 1RM (&le;8 reps)</button>
+            <button onclick="setChartMetric('volume')" id="metric-btn-volume" data-i18n="metricVol" class="px-3 py-1.5 rounded-lg text-xs font-bold themed-sub">Session Volume</button>
+          </div>
+
+          <div class="relative h-64 w-full">
+            <canvas id="progressionChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Weekly Hypertrophy Volume -->
+        <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-base font-extrabold flex items-center gap-1.5">
+                <span data-i18n="volTitle">Weekly Volume</span>
+                <button onclick="openGlossaryTerm('hypertrophy')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button>
+              </h2>
+              <span data-i18n="volTargetBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">10–20 sets/wk</span>
+            </div>
+            <p data-i18n="volSub" class="text-xs themed-muted mt-1">Last 7 days of working sets per muscle group</p>
+          </div>
+
+          <div id="weekly-volume-bars" class="space-y-3"></div>
+
+          <div data-i18n="volFootnote" class="pt-3 border-t border-slate-800/60 text-[11px] themed-muted">
+            Warmup sets and Sandbox Trial sessions are excluded.
+          </div>
+        </div>
+      </div>
+
+      <!-- PR & Set Audit Inspector -->
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 data-i18n="auditTitle" class="text-base font-extrabold">PR &amp; Set Audit Inspector</h2>
+            <p data-i18n="auditSub" class="text-xs themed-muted">Verify every logged set for the selected exercise. Toggle Warmup/Working, Pause-Rep duration, or delete outlier sets.</p>
+          </div>
+          <span id="audit-count-badge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg themed-sub self-start">0 sets</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider themed-muted">
+                <th class="py-2.5 px-3" data-i18n="thDate">Date</th>
+                <th class="py-2.5 px-3" data-i18n="thSession">Session</th>
+                <th class="py-2.5 px-3" data-i18n="thLoad">Load &times; Reps</th>
+                <th class="py-2.5 px-3" data-i18n="thPause">Pause</th>
+                <th class="py-2.5 px-3" data-i18n="thType">Type</th>
+                <th class="py-2.5 px-3">Est. 1RM</th>
+                <th class="py-2.5 px-3 text-right" data-i18n="thActions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody" class="divide-y divide-slate-800/60 text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: SMART OPTIMIZER ==================== -->
+    <section id="tab-optimizer" class="tab-view hidden space-y-5">
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-extrabold flex items-center gap-2">
+            <span data-i18n="optTitle">Smart Progressive Overload Engine</span>
+            <button onclick="openGlossaryTerm('progressive-overload')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button>
+          </h2>
+          <p data-i18n="optSub" class="text-xs themed-muted mt-0.5">Prescribes next target weights &amp; reps using inverse Brzycki percentages rounded to 2.5 kg increments.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="optimizer-cat-filter" onchange="renderOptimizer()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+            <option value="ALL" data-i18n="filterAllEq">All Equipment</option>
+            <option value="Free Weight">Free Weight</option>
+            <option value="Smith Machine">Smith Machine</option>
+            <option value="Machine / Cable">Machine / Cable</option>
+          </select>
+          <select id="optimizer-goal-select" onchange="renderOptimizer()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+            <option value="auto" data-i18n="goalAuto">Goal: Auto-Match</option>
+            <option value="strength" data-i18n="goalStrength">Strength (3–5 reps @ ~86–91%)</option>
+            <option value="hypertrophy" data-i18n="goalHyper">Hypertrophy (8–10 reps @ ~75–79%)</option>
+            <option value="volume" data-i18n="goalVol">Volume (10–12 reps @ ~71–75%)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="optimizer-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ==================== TAB 3: WORKOUT LOGGER ==================== -->
+    <section id="tab-logger" class="tab-view hidden space-y-5">
+      <!-- Launcher -->
+      <div id="logger-launcher" class="themed-card border rounded-2xl p-4 sm:p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 data-i18n="logStartTitle" class="text-lg font-extrabold">Start a Training Session</h2>
+            <p data-i18n="logStartSub" class="text-xs themed-muted">Choose a split pre-loaded with progressive targets, a custom template, or a Sandbox Trial.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <label data-i18n="logTargetBlock" class="text-xs font-bold themed-muted">Target Block:</label>
+            <select id="logger-goal-select" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+              <option value="auto" data-i18n="goalAuto">Auto-Match</option>
+              <option value="strength" data-i18n="goalStrength">Strength (3–5 reps)</option>
+              <option value="hypertrophy" data-i18n="goalHyper">Hypertrophy (8–10 reps)</option>
+              <option value="volume" data-i18n="goalVol">Volume (10–12 reps)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Saved Templates Section -->
+        <div id="custom-templates-section" class="hidden space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span data-i18n="myTemplatesHeading" class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">My Saved Templates</span>
+          </div>
+          <div id="custom-templates-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        </div>
+
+        <!-- Built-In Splits -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <button onclick="startSession('Push Day', ['ex_bench', 'ex_incline_db', 'ex_ohp', 'ex_lat_raise', 'ex_tricep_pushdown'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+            <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
+            <div class="text-sm font-bold">Push Workout</div>
+            <div class="text-[11px] themed-muted mt-1">Chest, Shoulders &amp; Triceps</div>
+          </button>
+
+          <button onclick="startSession('Pull Day', ['ex_deadlift', 'ex_pullup', 'ex_barbell_row', 'ex_face_pull', 'ex_bb_curl'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+            <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
+            <div class="text-sm font-bold">Pull Workout</div>
+            <div class="text-[11px] themed-muted mt-1">Back, Rear Delts &amp; Biceps</div>
+          </button>
+
+          <button onclick="startSession('Leg Day', ['ex_squat', 'ex_rdl', 'ex_leg_press', 'ex_leg_curl', 'ex_calf_raise'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+            <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
+            <div class="text-sm font-bold">Legs Workout</div>
+            <div class="text-[11px] themed-muted mt-1">Quads, Hamstrings &amp; Calves</div>
+          </button>
+
+          <button onclick="startSession('Smith Machine Upper', ['ex_smith_bench', 'ex_smith_incline_bench', 'ex_smith_ohp', 'ex_lat_pulldown', 'ex_tricep_pushdown'])" class="p-4 rounded-2xl themed-sub hover:border-cyan-500/60 border text-left transition">
+            <div class="text-xs font-extrabold text-cyan-400 mb-1">SMITH SPLIT</div>
+            <div class="text-sm font-bold">Smith Upper</div>
+            <div class="text-[11px] themed-muted mt-1">Guided bar + bar weight calc</div>
+          </button>
+
+          <button onclick="startSession(t('blankSessionName'), [])" class="p-4 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-left transition">
+            <div class="text-xs font-extrabold text-emerald-400 mb-1">EMPTY</div>
+            <div data-i18n="blankSessionTitle" class="text-sm font-bold">Blank Session</div>
+            <div data-i18n="blankSessionSub" class="text-[11px] themed-muted mt-1">Pick exercises manually</div>
+          </button>
+        </div>
+
+        <!-- Sandbox Trial Launcher -->
+        <div class="pt-4 border-t border-slate-800/70">
+          <div class="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <i data-lucide="flask-conical" class="w-4 h-4 text-amber-400"></i>
+                <h3 data-i18n="sandboxCardTitle" class="text-sm font-extrabold text-amber-400">Trial / Sandbox Workout Mode</h3>
+                <span data-i18n="trialZeroImpact" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">Excluded from Stats</span>
+              </div>
+              <p data-i18n="sandboxCardDesc" class="text-xs themed-muted leading-relaxed">
+                Practice logging sets, warm-up ramps, supersets, and test the automatic Smart Rest Timer with zero effect on your real PRs or charts.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button type="button" onclick="launchSampleTrialWorkout()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span data-i18n="launchSampleTrial">Launch Sample Trial Push</span>
+              </button>
+              <button type="button" onclick="startSession('Trial Workout (Sandbox)', [], true)" class="px-3.5 py-2.5 rounded-xl themed-card hover:opacity-90 border border-amber-500/40 text-xs font-extrabold text-amber-400 flex items-center gap-1.5 transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="blankTrialBtn">Blank Trial</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Session Workspace -->
+      <div id="logger-active" class="hidden space-y-4">
+        <!-- Sandbox Trial Active Banner -->
+        <div id="trial-active-banner" class="hidden bg-amber-500/15 border border-amber-400/50 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="flask-conical" class="w-5 h-5 text-amber-400 shrink-0"></i>
+            <div>
+              <div data-i18n="sandboxActiveTitle" class="text-xs font-extrabold uppercase tracking-wider text-amber-400">SANDBOX TRIAL MODE &mdash; Zero Impact on PRs &amp; Stats</div>
+              <p data-i18n="sandboxActiveSub" class="text-[11px] themed-muted">Check off any set (&check;) to test the weight- &amp; rep-correlated Smart Rest Timer.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session Top Controls -->
+        <div class="themed-card border rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="session-title-input" onchange="updateSessionMeta()" class="px-3 py-2 rounded-xl themed-sub border text-sm font-extrabold flex-1 sm:flex-initial" placeholder="Session Name" />
+            <input type="date" id="session-date-input" onchange="updateSessionMeta()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold" />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <button type="button" onclick="saveCurrentAsTemplate()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5 hover:border-emerald-400">
+              <i data-lucide="bookmark-plus" class="w-3.5 h-3.5 text-emerald-400"></i> <span data-i18n="saveTemplateBtn">Save as Template</span>
+            </button>
+            <button type="button" id="auto-rest-toggle-btn" onclick="toggleAutoRest()" class="px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-extrabold flex items-center gap-1.5">
+              <i data-lucide="timer" class="w-3.5 h-3.5"></i> <span id="auto-rest-label">Auto-Rest: ON</span>
+            </button>
+            <button type="button" onclick="triggerManualRest(120)" class="px-2.5 py-2 rounded-xl themed-sub border text-xs font-bold">
+              2:00
+            </button>
+            <button id="discard-session-btn" onclick="discardSession()" class="px-3 py-2 rounded-xl themed-sub hover:text-rose-400 text-xs font-bold transition">Discard</button>
+            <button id="finish-session-btn" onclick="finishSession()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-lg transition">Finish &amp; Save</button>
+          </div>
+        </div>
+
+        <!-- Active Exercise Cards -->
+        <div id="active-exercises-container" class="space-y-4"></div>
+
+        <!-- Add Exercise Picker -->
+        <div class="themed-card border rounded-2xl p-4 sm:p-5 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <h3 data-i18n="addExTitle" class="text-sm font-extrabold">Add Exercise to Session</h3>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1 p-1 rounded-xl themed-sub border text-[11px] font-bold">
+                <button type="button" onclick="setPickerCategory('ALL')" data-pcat="ALL" class="pcat-btn px-2.5 py-1 rounded-lg themed-accent-bg">All</button>
+                <button type="button" onclick="setPickerCategory('Free Weight')" data-pcat="Free Weight" class="pcat-btn px-2.5 py-1 rounded-lg">Free</button>
+                <button type="button" onclick="setPickerCategory('Smith Machine')" data-pcat="Smith Machine" class="pcat-btn px-2.5 py-1 rounded-lg">Smith</button>
+                <button type="button" onclick="setPickerCategory('Machine / Cable')" data-pcat="Machine / Cable" class="pcat-btn px-2.5 py-1 rounded-lg">Machine</button>
+              </div>
+              <input type="text" id="exercise-search-input" oninput="renderExercisePicker()" placeholder="Search..." class="px-3 py-2 rounded-xl themed-sub border text-xs font-semibold flex-1 sm:w-44" />
+            </div>
+          </div>
+
+          <div id="exercise-picker-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: HISTORY & DATA ==================== -->
+    <section id="tab-history" class="tab-view hidden space-y-5">
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 data-i18n="histTitle" class="text-lg font-extrabold">Workout History &amp; Data Management</h2>
+          <p data-i18n="histSub" class="text-xs themed-muted">Import from Strong, Hevy, StrengthLog, FitNotes, manage Sandbox Trial logs, or export JSON backups.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="history-trial-toggle-btn" onclick="toggleShowTrialWorkouts()" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-extrabold text-amber-400 flex items-center gap-1.5">
+            <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i> <span id="history-trial-toggle-label">Hide Trial Logs (0)</span>
+          </button>
+          <button id="clear-trials-btn" onclick="clearTrialWorkouts()" class="hidden px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-400">
+            Clear Trials
+          </button>
+          <button onclick="openCsvModal()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> <span data-i18n="importCsvBtn">Import CSV</span>
+          </button>
+          <button onclick="exportJsonData()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400"></i> JSON
+          </button>
+          <label class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="folder-up" class="w-3.5 h-3.5 text-violet-400"></i> <span data-i18n="restoreJsonBtn">Restore</span>
+            <input type="file" accept=".json" onchange="importJsonFile(event)" class="hidden" />
+          </label>
+          <button onclick="confirmClearAllData()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-bold text-rose-400">
+            <span data-i18n="clearAllBtn">Clear All</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="history-list" class="space-y-3"></div>
+    </section>
+
+    <!-- ==================== TAB 5: GLOSSARY ==================== -->
+    <section id="tab-glossary" class="tab-view hidden space-y-5">
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 data-i18n="glossTitle" class="text-lg font-extrabold">Training Glossary &amp; Formula Reference</h2>
+          <p data-i18n="glossSub" class="text-xs themed-muted">Clear definitions of strength training science and how ApexLift calculates your metrics.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="glossary-cat-select" onchange="renderGlossary()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+            <option value="ALL" data-i18n="glossAllCat">All Categories</option>
+            <option value="Metrics & Formulas">Metrics &amp; Formulas</option>
+            <option value="Training Science">Training Science</option>
+            <option value="Set Types & Execution">Set Types &amp; Execution</option>
+            <option value="Equipment & Mechanics">Equipment &amp; Mechanics</option>
+          </select>
+          <input type="text" id="glossary-search-input" oninput="renderGlossary()" placeholder="Search..." class="px-3 py-2 rounded-xl themed-sub border text-xs font-semibold" />
+        </div>
+      </div>
+
+      <div id="glossary-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+  </main>
+
+  <!-- ==================== FLOATING SMART REST TIMER ==================== -->
+  <div id="smart-rest-overlay" class="hidden fixed bottom-20 lg:bottom-6 right-3 sm:right-6 z-50 w-[calc(100vw-1.5rem)] max-w-sm themed-card border-2 border-emerald-500/40 rounded-2xl p-4 shadow-2xl space-y-3">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="relative w-14 h-14 shrink-0 flex items-center justify-center">
+          <svg class="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="currentColor" stroke-width="4" class="text-slate-800"></circle>
+            <circle id="smart-rest-ring" cx="28" cy="28" r="24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="0" class="text-emerald-400 transition-all duration-300"></circle>
+          </svg>
+          <span id="smart-rest-time" class="absolute font-mono text-xs font-extrabold">02:00</span>
+        </div>
+
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span id="smart-rest-status-badge" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">Smart Rest</span>
+            <span id="smart-rest-trial-badge" class="hidden text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400">Sandbox</span>
+            <button type="button" onclick="openGlossaryTerm('smart-rest')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold inline-flex items-center justify-center">?</button>
+          </div>
+          <h4 id="smart-rest-exercise" class="text-xs font-extrabold truncate mt-1">Barbell Bench Press</h4>
+          <p id="smart-rest-set-summary" class="text-[11px] font-semibold themed-muted truncate">80 kg &times; 3 reps</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <button type="button" id="rest-mute-btn" onclick="toggleRestMute()" class="p-2 rounded-lg themed-sub themed-muted hover:text-white">
+          <i data-lucide="volume-2" class="w-4 h-4"></i>
+        </button>
+        <button type="button" onclick="dismissSmartRestOverlay()" class="p-2 rounded-lg themed-sub themed-muted hover:text-rose-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="smart-rest-rationale" class="text-[11px] font-semibold px-2.5 py-1.5 rounded-xl themed-sub border leading-snug"></div>
+
+    <div class="grid grid-cols-4 gap-1.5">
+      <button type="button" onclick="adjustSmartRest(-15)" class="py-2 rounded-xl themed-sub border text-xs font-mono font-bold">-15s</button>
+      <button type="button" onclick="adjustSmartRest(15)" class="py-2 rounded-xl themed-sub border text-xs font-mono font-bold">+15s</button>
+      <button type="button" id="rest-pause-btn" onclick="togglePauseSmartRest()" class="py-2 rounded-xl themed-sub border text-xs font-bold">Pause</button>
+      <button type="button" onclick="dismissSmartRestOverlay()" class="py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-extrabold">Skip</button>
+    </div>
+  </div>
+
+  <!-- ==================== CSV IMPORTER MODAL ==================== -->
+  <div id="csv-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="themed-card border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 data-i18n="csvModalTitle" class="text-base font-extrabold">Universal CSV &amp; App Data Importer</h3>
+          <p data-i18n="csvModalSub" class="text-xs themed-muted">Supports Strong, Hevy, StrengthLog, FitNotes (EN/SV names &amp; automatic lbs &rarr; kg).</p>
+        </div>
+        <button onclick="closeCsvModal()" class="p-2 rounded-xl themed-sub"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <label class="px-4 py-2 rounded-xl themed-accent-bg text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5">
+          <i data-lucide="upload" class="w-4 h-4"></i> <span data-i18n="chooseCsvBtn">Choose CSV File</span>
+          <input type="file" accept=".csv,.tsv,.txt" onchange="handleCsvFileUpload(event)" class="hidden" />
+        </label>
+        <select id="csv-unit-select" onchange="parseCsvInput()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+          <option value="auto">Units: Auto-Detect</option>
+          <option value="kg">Kilograms (kg)</option>
+          <option value="lbs">Pounds (lbs &rarr; kg)</option>
+        </select>
+        <select id="csv-mode-select" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+          <option value="replace">Mode: Replace Existing</option>
+          <option value="merge">Mode: Merge (Skip Duplicates)</option>
+        </select>
+      </div>
+
+      <textarea id="csv-raw-textarea" oninput="parseCsvInput()" rows="6" placeholder="Date, Workout Name, Exercise Name, Set Order, Weight, Reps, RPE..." class="w-full p-3 rounded-xl themed-sub border font-mono text-xs"></textarea>
+
+      <div id="csv-preview-box" class="hidden p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-1">
+        <div id="csv-preview-summary" class="font-extrabold text-emerald-400"></div>
+        <div id="csv-preview-details" class="themed-muted"></div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeCsvModal()" class="px-4 py-2 rounded-xl themed-sub text-xs font-bold">Cancel</button>
+        <button id="csv-confirm-btn" onclick="commitCsvImport()" disabled class="px-4 py-2 rounded-xl bg-emerald-500 disabled:opacity-40 text-slate-950 text-xs font-extrabold">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast-box" class="hidden fixed top-20 right-4 z-50 px-4 py-2.5 rounded-xl themed-card border border-emerald-500/50 shadow-xl text-xs font-extrabold"></div>
+
+  <script>
+    // ==================== STORAGE KEYS & BILINGUAL DICTIONARY ====================
+    const STORAGE_KEY = 'apexlift_v5_data';
+    const LEGACY_V4_KEY = 'apexlift_v4_data';
+    const THEME_KEY = 'apexlift_theme';
+    const LANG_KEY = 'apexlift_lang';
+    const SMITH_KEY = 'apexlift_smith_cfg';
+    const REST_KEY = 'apexlift_rest_cfg';
+
+    let currentLang = localStorage.getItem(LANG_KEY) || 'sv';
+
+    const I18N = {
+      en: {
+        brandSub: 'Precision Strength',
+        navDashboard: 'Dashboard',
+        navDashboardShort: 'Stats',
+        navOptimizer: 'Optimizer',
+        navLogger: 'Workout Logger',
+        navLoggerShort: 'Log',
+        navHistory: 'History & Data',
+        navHistoryShort: 'History',
+        navGlossary: 'Glossary',
+        headerTrial: 'Trial',
+        headerLog: 'Log',
+        trialBannerTitle: 'Want to test logging & Smart Rest Timer first?',
+        trialZeroImpact: 'Zero Impact on Stats',
+        trialBannerDesc: 'Launch a sandbox trial workout with pre-loaded sets without affecting your real PRs or charts.',
+        trialStartBtn: 'Start Trial Workout',
+        kpiSessions: 'Real Sessions',
+        kpiSessionsSub: 'Excludes Sandbox Trials',
+        kpiTonnage: 'Tonnage',
+        kpiTonnageSub: 'Working sets + BW',
+        kpiE1rm: 'Est. 1RM',
+        kpiE1rmSub: 'Brzycki ≤8 reps (1 rep = exact)',
+        bwTitle: 'Bodyweight & Relative Strength (× BW)',
+        bwDesc: 'Used to calculate relative strength ratios (e.g. 1.15× BW) and total load on Pull-Ups & Dips.',
+        bwLogBtn: 'Log BW',
+        chartTitle: 'Lift Progression & PR Curve',
+        chartSub: 'Track actual top weight or conservative Brzycki e1RM over time',
+        filterAllEq: 'All Equipment',
+        filterAllSets: 'All Sets',
+        filterNoPause: 'No-Pause',
+        filterPaused: 'Paused Only',
+        metricMaxWt: 'Actual Max Weight',
+        metricE1rm: 'Est. 1RM (≤8 reps)',
+        metricVol: 'Session Volume',
+        volTitle: 'Weekly Volume',
+        volTargetBadge: '10–20 sets/wk',
+        volSub: 'Last 7 days of working sets per muscle group',
+        volFootnote: 'Warmup sets and Sandbox Trial sessions are excluded.',
+        auditTitle: 'PR & Set Audit Inspector',
+        auditSub: 'Verify every logged set for the selected exercise. Toggle Warmup/Working, Pause-Rep duration, or delete outlier sets.',
+        thDate: 'Date',
+        thSession: 'Session',
+        thLoad: 'Load × Reps',
+        thPause: 'Pause',
+        thType: 'Type',
+        thActions: 'Actions',
+        optTitle: 'Smart Progressive Overload Engine',
+        optSub: 'Prescribes next target weights & reps using inverse Brzycki percentages rounded to 2.5 kg increments.',
+        goalAuto: 'Goal: Auto-Match',
+        goalStrength: 'Strength (3–5 reps @ ~86–91%)',
+        goalHyper: 'Hypertrophy (8–10 reps @ ~75–79%)',
+        goalVol: 'Volume (10–12 reps @ ~71–75%)',
+        logStartTitle: 'Start a Training Session',
+        logStartSub: 'Choose a split pre-loaded with progressive targets, a custom template, or a Sandbox Trial.',
+        logTargetBlock: 'Target Block:',
+        myTemplatesHeading: 'My Saved Templates',
+        blankSessionName: 'Custom Workout',
+        blankSessionTitle: 'Blank Session',
+        blankSessionSub: 'Pick exercises manually',
+        sandboxCardTitle: 'Trial / Sandbox Workout Mode',
+        sandboxCardDesc: 'Practice logging sets, warm-up ramps, supersets, and test the automatic Smart Rest Timer with zero effect on your real PRs or charts.',
+        launchSampleTrial: 'Launch Sample Trial Push',
+        blankTrialBtn: 'Blank Trial',
+        sandboxActiveTitle: 'SANDBOX TRIAL MODE — Zero Impact on PRs & Stats',
+        sandboxActiveSub: 'Check off any set (✓) to test the weight- & rep-correlated Smart Rest Timer.',
+        saveTemplateBtn: 'Save as Template',
+        addExTitle: 'Add Exercise to Session',
+        histTitle: 'Workout History & Data Management',
+        histSub: 'Import from Strong, Hevy, StrengthLog, FitNotes, manage Sandbox Trial logs, or export JSON backups.',
+        importCsvBtn: 'Import CSV',
+        restoreJsonBtn: 'Restore',
+        clearAllBtn: 'Clear All',
+        glossTitle: 'Training Glossary & Formula Reference',
+        glossSub: 'Clear definitions of strength training science and how ApexLift calculates your metrics.',
+        glossAllCat: 'All Categories',
+        csvModalTitle: 'Universal CSV & App Data Importer',
+        csvModalSub: 'Supports Strong, Hevy, StrengthLog, FitNotes (EN/SV names & automatic lbs → kg).',
+        chooseCsvBtn: 'Choose CSV File',
+        warmupBtn: 'Warm-Up Ramp',
+        dupSetBtn: 'Copy Prev Set',
+        addSetBtn: '+ Add Set',
+        linkSupersetBtn: 'Link Superset',
+        unlinkSupersetBtn: 'Unlink Superset',
+        rpeAlertTitle: 'High Fatigue Detected (@RPE ≥ 9.5)',
+        rpeAlertApply: 'Drop -2.5 kg on Remaining Sets'
+      },
+      sv: {
+        brandSub: 'Precisionsstyrka',
+        navDashboard: 'Översikt',
+        navDashboardShort: 'Översikt',
+        navOptimizer: 'Optimerare',
+        navLogger: 'Träningslogg',
+        navLoggerShort: 'Logga',
+        navHistory: 'Historik & Data',
+        navHistoryShort: 'Historik',
+        navGlossary: 'Ordlista',
+        headerTrial: 'Testpass',
+        headerLog: 'Logga',
+        trialBannerTitle: 'Vill du testa loggningen och den smarta vilotimern först?',
+        trialZeroImpact: 'Påverkar ej statistik',
+        trialBannerDesc: 'Starta ett testpass i sandlådeläge med färdiga set utan att ändra dina riktiga PR eller kurvor.',
+        trialStartBtn: 'Starta Testpass',
+        kpiSessions: 'Riktiga Pass',
+        kpiSessionsSub: 'Exkluderar testpass',
+        kpiTonnage: 'Total Volym (Tonnage)',
+        kpiTonnageSub: 'Arbetsset + kroppsvikt',
+        kpiE1rm: 'Beräknat 1RM',
+        kpiE1rmSub: 'Brzycki ≤8 reps (1 rep = exakt)',
+        bwTitle: 'Kroppsvikt & Relativ Styrka (× KV)',
+        bwDesc: 'Används för relativ styrkekvot (t.ex. 1.15× KV) samt total belastning i Chins & Dips.',
+        bwLogBtn: 'Spara KV',
+        chartTitle: 'Styrkeutveckling & PR-kurva',
+        chartSub: 'Följ tyngsta lyft eller konservativt Brzycki e1RM över tid',
+        filterAllEq: 'All Utrustning',
+        filterAllSets: 'Alla Set',
+        filterNoPause: 'Utan Paus',
+        filterPaused: 'Endast Paus-reps',
+        metricMaxWt: 'Tyngsta Vikt (kg)',
+        metricE1rm: 'Beräknat 1RM (≤8 reps)',
+        metricVol: 'Passvolym (kg)',
+        volTitle: 'Veckovolym',
+        volTargetBadge: '10–20 set/v',
+        volSub: 'Senaste 7 dagarnas arbetsset per muskelgrupp',
+        volFootnote: 'Uppvärmningsset och testpass räknas inte in.',
+        auditTitle: 'PR- & Setgranskning',
+        auditSub: 'Granska alla loggade set för vald övning. Växla uppvärmning, paus-tid eller radera felaktiga set.',
+        thDate: 'Datum',
+        thSession: 'Pass',
+        thLoad: 'Vikt × Reps',
+        thPause: 'Paus',
+        thType: 'Typ',
+        thActions: 'Åtgärder',
+        optTitle: 'Smart Progressiv Överbelastning',
+        optSub: 'Räknar ut nästa målvikt & reps med omvänd Brzycki-formel avrundat till 2.5 kg.',
+        goalAuto: 'Mål: Auto-matcha',
+        goalStrength: 'Styrka (3–5 reps @ ~86–91%)',
+        goalHyper: 'Hypertrofi (8–10 reps @ ~75–79%)',
+        goalVol: 'Volym (10–12 reps @ ~71–75%)',
+        logStartTitle: 'Starta Träningspass',
+        logStartSub: 'Välj ett upplägg med beräknade målvikter, en egen sparad mall eller ett testpass.',
+        logTargetBlock: 'Träningsblock:',
+        myTemplatesHeading: 'Mina Sparade Mallar',
+        blankSessionName: 'Eget Träningspass',
+        blankSessionTitle: 'Tomt Pass',
+        blankSessionSub: 'Välj övningar manuellt',
+        sandboxCardTitle: 'Testpass / Sandlådeläge',
+        sandboxCardDesc: 'Testa setloggning, uppvärmningsgenerator, superset och den smarta vilotimern helt utan att påverka dina riktiga PR eller kurvor.',
+        launchSampleTrial: 'Starta Exempel-Push (Test)',
+        blankTrialBtn: 'Tomt Testpass',
+        sandboxActiveTitle: 'TESTPASS / SANDLÅDA — Påverkar inte PR eller statistik',
+        sandboxActiveSub: 'Bocka av ett set (✓) för att se hur den vikt- och repsbaserade vilotimern fungerar.',
+        saveTemplateBtn: 'Spara som mall',
+        addExTitle: 'Lägg till övning i passet',
+        histTitle: 'Träningshistorik & Datahantering',
+        histSub: 'Importera från Strong, Hevy, StrengthLog, FitNotes, hantera testpass eller exportera JSON-backup.',
+        importCsvBtn: 'Importera CSV',
+        restoreJsonBtn: 'Återställ',
+        clearAllBtn: 'Rensa Allt',
+        glossTitle: 'Träningsordlista & Formelguide',
+        glossSub: 'Tydliga förklaringar av träningsbegrepp och hur ApexLift räknar ut dina värden.',
+        glossAllCat: 'Alla Kategorier',
+        csvModalTitle: 'CSV- & Träningsdataimportör',
+        csvModalSub: 'Stöder Strong, Hevy, StrengthLog, FitNotes (svenska/engelska namn & lbs → kg).',
+        chooseCsvBtn: 'Välj CSV-fil',
+        warmupBtn: 'Uppvärmning',
+        dupSetBtn: 'Kopiera föregående',
+        addSetBtn: '+ Lägg till set',
+        linkSupersetBtn: 'Länka Superset',
+        unlinkSupersetBtn: 'Bryt Superset',
+        rpeAlertTitle: 'Hög utmattning (@RPE ≥ 9.5)',
+        rpeAlertApply: 'Sänk -2.5 kg på kvarvarande set'
+      }
+    };
+
+    function t(key) {
+      return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+    }
+
+    // ==================== EXERCISE CATALOG (EN + SV NAMES) ====================
+    const DEFAULT_EXERCISES = [
+      // Free Weight
+      { id: 'ex_bench', name: 'Barbell Bench Press', nameSv: 'Skivstångsbänkpress', muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_paused_bench', name: 'Paused Barbell Bench Press', nameSv: 'Pausad Bänkpress', muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [4, 8], defaultPauseSec: 2 },
+      { id: 'ex_incline_db', name: 'Incline Dumbbell Press', nameSv: 'Sned Hantelpress', muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_squat', name: 'Barbell Back Squat', nameSv: 'Knäböj (Skivstång)', muscle: 'Legs', category: 'Free Weight', compound: true, repRange: [5, 8], defaultPauseSec: 0 },
+      { id: 'ex_paused_squat', name: 'Paused Barbell Back Squat', nameSv: 'Pausad Knäböj', muscle: 'Legs', category: 'Free Weight', compound: true, repRange: [4, 6], defaultPauseSec: 2 },
+      { id: 'ex_deadlift', name: 'Conventional Deadlift', nameSv: 'Marklyft', muscle: 'Back', category: 'Free Weight', compound: true, repRange: [3, 6], defaultPauseSec: 0 },
+      { id: 'ex_paused_deadlift', name: 'Paused Conventional Deadlift', nameSv: 'Pausat Marklyft', muscle: 'Back', category: 'Free Weight', compound: true, repRange: [3, 5], defaultPauseSec: 2 },
+      { id: 'ex_rdl', name: 'Romanian Deadlift (RDL)', nameSv: 'Rumänska Marklyft (RDL)', muscle: 'Legs', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_ohp', name: 'Overhead Barbell Press', nameSv: 'Militärpress (Skivstång)', muscle: 'Shoulders', category: 'Free Weight', compound: true, repRange: [5, 8], defaultPauseSec: 0 },
+      { id: 'ex_paused_ohp', name: 'Paused Overhead Barbell Press', nameSv: 'Pausad Militärpress', muscle: 'Shoulders', category: 'Free Weight', compound: true, repRange: [4, 8], defaultPauseSec: 2 },
+      { id: 'ex_barbell_row', name: 'Bent-Over Barbell Row', nameSv: 'Skivstångsrodd', muscle: 'Back', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_lat_raise', name: 'Dumbbell Lateral Raise', nameSv: 'Hantellyft åt sidan', muscle: 'Shoulders', category: 'Free Weight', compound: false, repRange: [12, 15], defaultPauseSec: 0 },
+      { id: 'ex_bb_curl', name: 'Barbell / EZ-Bar Curl', nameSv: 'Skivstångscurl / EZ-curl', muscle: 'Arms', category: 'Free Weight', compound: false, repRange: [8, 12], defaultPauseSec: 0 },
+
+      // Smith Machine
+      { id: 'ex_smith_bench', name: 'Smith Machine Bench Press', nameSv: 'Bänkpress i Smith-maskin', muscle: 'Chest', category: 'Smith Machine', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_smith_incline_bench', name: 'Smith Machine Incline Press', nameSv: 'Sned Bänkpress i Smith', muscle: 'Chest', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_smith_ohp', name: 'Smith Machine Shoulder Press', nameSv: 'Axelpress i Smith-maskin', muscle: 'Shoulders', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_smith_squat', name: 'Smith Machine Back Squat', nameSv: 'Knäböj i Smith-maskin', muscle: 'Legs', category: 'Smith Machine', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_smith_rdl', name: 'Smith Machine Romanian Deadlift', nameSv: 'Rumänska Marklyft i Smith', muscle: 'Legs', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+
+      // Machine / Cable
+      { id: 'ex_lat_pulldown', name: 'Lat Pulldown (Cable)', nameSv: 'Latsdrag i kabelmaskin', muscle: 'Back', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_face_pull', name: 'Cable Face Pull', nameSv: 'Face Pull i kabel', muscle: 'Shoulders', category: 'Machine / Cable', compound: false, repRange: [12, 15], defaultPauseSec: 0 },
+      { id: 'ex_tricep_pushdown', name: 'Cable Triceps Pushdown', nameSv: 'Triceps Pushdown i kabel', muscle: 'Arms', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_leg_press', name: '45-Degree Leg Press', nameSv: 'Benpress 45°', muscle: 'Legs', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_leg_curl', name: 'Seated / Lying Leg Curl', nameSv: 'Lårcurl (Sittande / Liggande)', muscle: 'Legs', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_calf_raise', name: 'Standing Calf Raise', nameSv: 'Stående Vadpress', muscle: 'Legs', category: 'Machine / Cable', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
+      { id: 'ex_cable_crunch', name: 'Weighted Cable Crunch', nameSv: 'Kabelcrunch', muscle: 'Core', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+
+      // Bodyweight (usesUserBw: true)
+      { id: 'ex_pullup', name: 'Pull-Ups / Chins', nameSv: 'Chins / Pull-ups (+KV)', muscle: 'Back', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [6, 12], defaultPauseSec: 0 },
+      { id: 'ex_dips', name: 'Parallel Bar Dips', nameSv: 'Dips (+KV)', muscle: 'Chest', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [6, 12], defaultPauseSec: 0 }
+    ];
+
+    const SMITH_PRESETS = [
+      { id: 'plates_only', labelEn: 'Plates Only / Full Counterbalance (0 kg)', labelSv: 'Endast viktskivor / Motvikt (0 kg)', weight: 0 },
+      { id: 'lifefitness', labelEn: 'Life Fitness / Cybex Counterbalanced (7 kg)', labelSv: 'Life Fitness / Cybex med motvikt (7 kg)', weight: 7 },
+      { id: 'technogym', labelEn: 'Technogym / Matrix Commercial (15 kg)', labelSv: 'Technogym / Matrix Standard (15 kg)', weight: 15 },
+      { id: 'hammer', labelEn: 'Hammer Strength / Eleiko Carriage (20 kg)', labelSv: 'Hammer Strength / Eleiko (20 kg)', weight: 20 },
+      { id: 'heavy', labelEn: 'Heavy-Duty Linear Carriage (25 kg)', labelSv: 'Tung Linjär Smith-stång (25 kg)', weight: 25 },
+      { id: 'custom', labelEn: 'Custom Bar Weight (kg)', labelSv: 'Egen stångvikt (kg)', weight: 15 }
+    ];
+
+    const GLOSSARY_TERMS = [
+      {
+        id: 'hypertrophy',
+        category: 'Training Science',
+        termEn: 'Hypertrophy (10–20 Sets/Week)',
+        termSv: 'Hypertrofi (10–20 set/vecka)',
+        defEn: 'The growth of muscle fiber cross-sectional area driven by high mechanical tension close to muscular failure and adequate weekly set volume.',
+        defSv: 'Muskeltillväxt som drivs av hög mekanisk spänning nära muskulär utmattning kombinerat med tillräcklig veckovolym.',
+        useEn: 'ApexLift counts working sets over the past 7 days per muscle group against the optimal 10–20 sets/week growth window.',
+        useSv: 'ApexLift räknar arbetsset under de senaste 7 dagarna per muskelgrupp mot det optimala intervallet 10–20 set/vecka.'
+      },
+      {
+        id: 'e1rm',
+        category: 'Metrics & Formulas',
+        termEn: 'Estimated 1RM (Conservative Brzycki)',
+        termSv: 'Beräknat 1RM (Konservativ Brzycki)',
+        defEn: 'An estimate of the heaviest weight you could lift for 1 single rep: Weight × (36 / (37 − Reps)).',
+        defSv: 'En uppskattning av din maximala 1-repsvikt baserat på ett tyngre set: Vikt × (36 / (37 − Reps)).',
+        useEn: '1-rep singles equal exact weight lifted, and e1RM is capped at ≤ 8 reps so high-rep pump sets never inflate your max.',
+        useSv: '1-repslyft räknas exakt som lyft vikt, och e1RM begränsas till ≤ 8 reps så att högrepsset aldrig blåser upp ditt max.'
+      },
+      {
+        id: 'relative-strength',
+        category: 'Metrics & Formulas',
+        termEn: 'Relative Strength (× Bodyweight)',
+        termSv: 'Relativ Styrka (× Kroppsvikt)',
+        defEn: 'Your 1RM divided by your current bodyweight (e.g., 82.5 kg Bench at 75 kg BW = 1.10× BW).',
+        defSv: 'Ditt 1RM delat med din kroppsvikt (t.ex. 82.5 kg bänkpress vid 75 kg kroppsvikt = 1.10× KV).',
+        useEn: 'Log your bodyweight on the Dashboard to see relative strength ratios and automatically include bodyweight in Chins & Dips.',
+        useSv: 'Logga din kroppsvikt på Översikten för att se relativ styrkekvot och automatiskt räkna med kroppsvikten i Chins & Dips.'
+      },
+      {
+        id: 'progressive-overload',
+        category: 'Training Science',
+        termEn: 'Progressive Overload & Double Progression',
+        termSv: 'Progressiv Överbelastning & Dubbel Progression',
+        defEn: 'Gradually increasing stress by adding reps within a target range (e.g., 8→10 reps) before increasing load by 1.25–2.5 kg.',
+        defSv: 'Att gradvis öka belastningen genom att först öka antalet reps inom ett intervall (t.ex. 8→10) innan du höjer vikten med 2.5 kg.',
+        useEn: 'The Optimizer computes inverse Brzycki working targets rounded to 2.5 kg increments.',
+        useSv: 'Optimeraren räknar ut målvikter med omvänd Brzycki-formel avrundat till 2.5 kg.'
+      },
+      {
+        id: 'smart-rest',
+        category: 'Metrics & Formulas',
+        termEn: 'Smart Rest Intervals (ATP-CP Recovery)',
+        termSv: 'Smart Vilotimer (ATP-CP Återhämtning)',
+        defEn: 'Rest between sets restores phosphocreatine (ATP-CP) and clears neural fatigue so force output stays high.',
+        defSv: 'Vila mellan set återställer kreatinfosfat (ATP-CP) och nervsystemets kraftproduktion inför nästa set.',
+        useEn: 'Checking off a set triggers a countdown scaled by % of e1RM, reps, compound vs. isolation, RPE, and pause duration.',
+        useSv: 'När du bockar av ett set startar en nedräkning anpassad efter % av e1RM, reps, basövning, RPE och paus-reps.'
+      },
+      {
+        id: 'pause-reps',
+        category: 'Set Types & Execution',
+        termEn: 'Pause-Reps (1s–3s+ Isometric Stop)',
+        termSv: 'Paus-reps (1s–3s+ Isometriskt Stopp)',
+        defEn: 'Holding the weight completely still for 1–3+ seconds at the bottom of a lift to eliminate bounce and build starting strength.',
+        defSv: 'Att hålla vikten helt stilla i 1–3+ sekunder i bottenläget för att ta bort studsen och bygga explosiv startstyrka.',
+        useEn: 'Tag individual sets with 1s/2s/3s+ pause or filter PR charts specifically for paused lifts.',
+        useSv: 'Markera enskilda set med 1s/2s/3s+ paus och filtrera PR-kurvor separat för pausade lyft.'
+      },
+      {
+        id: 'smith-counterbalance',
+        category: 'Equipment & Mechanics',
+        termEn: 'Smith Machine Starting Resistance',
+        termSv: 'Smith-maskinens Startvikt',
+        defEn: 'Smith bars range from 0–7 kg (counterbalanced) to 15–25 kg (non-counterbalanced) depending on gym brand.',
+        defSv: 'Smith-stänger väger allt från 0–7 kg (motviktsbalanserade) till 15–25 kg beroende på märke.',
+        useEn: 'Smith lifts are kept separate from free-weight lifts with a built-in brand preset & plate-loader helper.',
+        useSv: 'Smith-övningar hålls helt separerade från fria vikter med en inbyggd märkes- och viktkalkylator.'
+      }
+    ];
+
+    let state = {
+      exercises: [...DEFAULT_EXERCISES],
+      workouts: [],
+      bodyweights: [],
+      customTemplates: [],
+      activeSession: null
+    };
+    let smithConfig = { presetId: 'technogym', barWeight: 15 };
+    let restSettings = { autoStart: true, muted: false };
+    let chartInstance = null;
+    let currentChartMetric = 'maxWeight';
+    let pickerCategoryFilter = 'ALL';
+    let showTrialWorkoutsInHistory = true;
+    let parsedCsvWorkouts = [];
+
+    // Smart Rest Timer Runtime
+    let restTimerInterval = null;
+    let restRemainingSec = 0;
+    let restTotalSec = 120;
+    let restPaused = false;
+
+    // ==================== PERSISTENCE & MIGRATION ====================
+    function loadAllState() {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'obsidian';
+      setTheme(savedTheme, false);
+
+      try {
+        const sc = JSON.parse(localStorage.getItem(SMITH_KEY));
+        if (sc && typeof sc.barWeight === 'number') smithConfig = sc;
+      } catch (_) {}
+
+      try {
+        const rc = JSON.parse(localStorage.getItem(REST_KEY));
+        if (rc) restSettings = { ...restSettings, ...rc };
+      } catch (_) {}
+
+      // Load v5 or migrate seamlessly from v4
+      let raw = null;
+      try {
+        raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!raw) {
+          const v4 = JSON.parse(localStorage.getItem(LEGACY_V4_KEY));
+          if (v4 && Array.isArray(v4.workouts)) raw = v4;
+        }
+      } catch (_) {}
+
+      if (raw && Array.isArray(raw.workouts)) {
+        const cleanWorkouts = raw.workouts.filter(w => !String(w.id || '').startsWith('sample_'));
+        const mergedExercises = [...DEFAULT_EXERCISES];
+        (raw.exercises || []).forEach(ex => {
+          if (!mergedExercises.some(d => d.id === ex.id)) mergedExercises.push(ex);
+        });
+        state = {
+          exercises: mergedExercises,
+          workouts: cleanWorkouts,
+          bodyweights: Array.isArray(raw.bodyweights) ? raw.bodyweights : [],
+          customTemplates: Array.isArray(raw.customTemplates) ? raw.customTemplates : [],
+          activeSession: raw.activeSession || null
+        };
+        saveState();
+      }
+
+      updateAutoRestUI();
+      applyLanguageUI();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function saveSmithConfig() {
+      localStorage.setItem(SMITH_KEY, JSON.stringify(smithConfig));
+    }
+
+    function saveRestSettings() {
+      localStorage.setItem(REST_KEY, JSON.stringify(restSettings));
+    }
+
+    // ==================== BILINGUAL SWITCHER (SV / EN) ====================
+    function setLanguage(lang) {
+      currentLang = lang === 'en' ? 'en' : 'sv';
+      localStorage.setItem(LANG_KEY, currentLang);
+      document.documentElement.lang = currentLang;
+      applyLanguageUI();
+
+      // Re-render visible tab
+      const activeTab = document.querySelector('.tab-view:not(.hidden)')?.id?.replace('tab-', '') || 'dashboard';
+      if (activeTab === 'dashboard') renderDashboard();
+      if (activeTab === 'optimizer') renderOptimizer();
+      if (activeTab === 'logger') renderLoggerView();
+      if (activeTab === 'history') renderHistoryView();
+      if (activeTab === 'glossary') renderGlossary();
+    }
+
+    function applyLanguageUI() {
+      const svBtn = document.getElementById('lang-btn-sv');
+      const enBtn = document.getElementById('lang-btn-en');
+      if (svBtn && enBtn) {
+        svBtn.className = currentLang === 'sv' ? 'px-2 py-1 rounded-lg themed-accent-bg transition' : 'px-2 py-1 rounded-lg themed-muted transition';
+        enBtn.className = currentLang === 'en' ? 'px-2 py-1 rounded-lg themed-accent-bg transition' : 'px-2 py-1 rounded-lg themed-muted transition';
+      }
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) el.textContent = t(key);
+      });
+    }
+
+    function getExerciseDisplayName(meta) {
+      if (!meta) return '';
+      if (currentLang === 'sv' && meta.nameSv) return meta.nameSv;
+      return meta.name;
+    }
+
+    // ==================== THEME SWITCHER ====================
+    function setTheme(themeName, rerenderChart = true) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      if (themeName === 'light') {
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+      }
+      localStorage.setItem(THEME_KEY, themeName);
+
+      document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+        const active = btn.getAttribute('data-theme-btn') === themeName;
+        btn.classList.toggle('ring-2', active);
+        btn.classList.toggle('ring-white', active && themeName !== 'light');
+        btn.classList.toggle('ring-slate-900', active && themeName === 'light');
+        btn.classList.toggle('scale-110', active);
+      });
+
+      if (rerenderChart && chartInstance) renderDashboard();
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById('toast-box');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(box._timer);
+      box._timer = setTimeout(() => box.classList.add('hidden'), 3200);
+    }
+
+    // ==================== NAVIGATION ====================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isMatch = btn.getAttribute('data-nav') === tabId;
+        btn.classList.toggle('themed-accent-bg', isMatch);
+        btn.classList.toggle('themed-muted', !isMatch);
+      });
+
+      if (tabId === 'dashboard') renderDashboard();
+      if (tabId === 'optimizer') renderOptimizer();
+      if (tabId === 'logger') renderLoggerView();
+      if (tabId === 'history') renderHistoryView();
+      if (tabId === 'glossary') renderGlossary();
+      lucide.createIcons();
+    }
+
+    function openGlossaryTerm(termId) {
+      switchTab('glossary');
+      const card = document.getElementById('glossary-card-' + termId);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('ring-2', 'ring-emerald-400');
+        setTimeout(() => card.classList.remove('ring-2', 'ring-emerald-400'), 2200);
+      }
+    }
+
+    // ==================== BODYWEIGHT & RELATIVE STRENGTH ====================
+    function getLatestBodyweight() {
+      if (!state.bodyweights || state.bodyweights.length === 0) return null;
+      const sorted = [...state.bodyweights].sort((a, b) => new Date(b.date) - new Date(a.date));
+      return sorted[0];
+    }
+
+    function logBodyweightEntry() {
+      const dateVal = document.getElementById('bw-date-input').value || new Date().toISOString().slice(0, 10);
+      const wtVal = parseFloat(document.getElementById('bw-weight-input').value);
+      if (!wtVal || wtVal <= 20 || wtVal > 350) {
+        showToast(currentLang === 'sv' ? 'Ange en giltig kroppsvikt (kg)' : 'Enter a valid bodyweight (kg)');
+        return;
+      }
+      const existingIdx = state.bodyweights.findIndex(b => b.date === dateVal);
+      if (existingIdx >= 0) {
+        state.bodyweights[existingIdx].weight = wtVal;
+      } else {
+        state.bodyweights.push({ date: dateVal, weight: wtVal });
+      }
+      saveState();
+      renderDashboard();
+      showToast(currentLang === 'sv' ? `Kroppsvikt sparad: ${wtVal} kg` : `Bodyweight logged: ${wtVal} kg`);
+    }
+
+    function renderBodyweightWidget() {
+      const dateInput = document.getElementById('bw-date-input');
+      if (dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+
+      const latest = getLatestBodyweight();
+      const summaryEl = document.getElementById('bw-latest-summary');
+      const pillsEl = document.getElementById('bw-sparkline-pills');
+
+      if (!latest) {
+        summaryEl.textContent = currentLang === 'sv' ? 'Ingen kroppsvikt loggad ännu.' : 'No bodyweight logged yet.';
+        pillsEl.innerHTML = '';
+        return;
+      }
+
+      const sorted = [...state.bodyweights].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const first = sorted[0];
+      const diff = Math.round((latest.weight - first.weight) * 10) / 10;
+      const diffTxt = sorted.length > 1 ? ` (${diff >= 0 ? '+' : ''}${diff} kg)` : '';
+
+      summaryEl.textContent = currentLang === 'sv'
+        ? `Senaste: ${latest.weight} kg (${latest.date})${diffTxt}`
+        : `Latest: ${latest.weight} kg (${latest.date})${diffTxt}`;
+
+      pillsEl.innerHTML = sorted.slice(-4).map(b => `
+        <span class="px-2 py-1 rounded-lg themed-sub border font-mono text-[10px] shrink-0">
+          ${b.date.slice(5)}: <strong>${b.weight}kg</strong>
+        </span>
+      `).join('');
+    }
+
+    // ==================== CONSERVATIVE BRZYCKI 1RM & EFFECTIVE LOAD ====================
+    function getEffectiveSetWeight(exMeta, rawWeight) {
+      const w = Number(rawWeight) || 0;
+      if (exMeta && exMeta.usesUserBw) {
+        const bw = getLatestBodyweight();
+        return (bw ? bw.weight : 0) + w;
+      }
+      return w;
+    }
+
+    function calcConservativeE1RM(weight, reps) {
+      const w = Number(weight) || 0;
+      const r = Number(reps) || 0;
+      if (w <= 0 || r <= 0) return null;
+      if (r === 1) return Math.round(w * 10) / 10;
+      if (r > 8) return null;
+      const est = w * (36 / (37 - r));
+      return Math.round(est * 10) / 10;
+    }
+
+    function inverseBrzyckiWeight(e1rm, targetReps) {
+      if (!e1rm || e1rm <= 0) return 20;
+      const raw = e1rm * ((37 - targetReps) / 36);
+      return Math.max(2.5, Math.round(raw / 2.5) * 2.5);
+    }
+
+    function getRealWorkouts() {
+      return state.workouts.filter(w => !w.isTrial);
+    }
+
+    function getTrialWorkouts() {
+      return state.workouts.filter(w => Boolean(w.isTrial));
+    }
+
+    function getExerciseMeta(exId) {
+      return state.exercises.find(e => e.id === exId) || {
+        id: exId,
+        name: exId,
+        nameSv: exId,
+        muscle: 'Chest',
+        category: 'Free Weight',
+        compound: true,
+        repRange: [8, 10],
+        defaultPauseSec: 0
+      };
+    }
+
+    function getEquipmentBadgeHtml(category) {
+      const cat = category || 'Free Weight';
+      if (cat === 'Smith Machine') {
+        return `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/35 text-cyan-400">Smith</span>`;
+      }
+      if (cat === 'Machine / Cable') {
+        return `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/35 text-violet-400">Machine</span>`;
+      }
+      if (cat === 'Bodyweight') {
+        return `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-400">${currentLang === 'sv' ? 'Kroppsvikt' : 'Bodyweight'}</span>`;
+      }
+      return `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/35 text-blue-400">${currentLang === 'sv' ? 'Fri Vikt' : 'Free Weight'}</span>`;
+    }
+
+    function getExerciseStats(exerciseId, pauseFilter = 'all') {
+      const exMeta = getExerciseMeta(exerciseId);
+      const realWorkouts = [...getRealWorkouts()].sort((a, b) => new Date(a.date) - new Date(b.date));
+      let actualMaxWeight = 0;
+      let actualMaxReps = 0;
+      let bestWorkingWeight = 0;
+      let bestWorkingReps = 0;
+      let bestE1RM = 0;
+      const timeline = [];
+
+      realWorkouts.forEach(w => {
+        const exEntry = (w.exercises || []).find(e => e.exerciseId === exerciseId);
+        if (!exEntry) return;
+
+        let sessionMaxW = 0;
+        let sessionBestE1RM = 0;
+        let sessionVol = 0;
+        let matchedAny = false;
+
+        (exEntry.sets || []).forEach(s => {
+          if (s.completed === false || s.type === 'warmup') return;
+          const pSec = Number(s.pauseSec) || 0;
+          if (pauseFilter === 'paused' && pSec === 0) return;
+          if (pauseFilter === 'nopause' && pSec > 0) return;
+
+          matchedAny = true;
+          const rawWt = Number(s.weight) || 0;
+          const effWt = getEffectiveSetWeight(exMeta, rawWt);
+          const rp = Number(s.reps) || 0;
+          sessionVol += effWt * rp;
+
+          if (rawWt > sessionMaxW) sessionMaxW = rawWt;
+          if (rawWt > actualMaxWeight || (rawWt === actualMaxWeight && rp > actualMaxReps)) {
+            actualMaxWeight = rawWt;
+            actualMaxReps = rp;
+          }
+          if (rp >= 3 && (rawWt > bestWorkingWeight || (rawWt === bestWorkingWeight && rp > bestWorkingReps))) {
+            bestWorkingWeight = rawWt;
+            bestWorkingReps = rp;
+          }
+          const e1 = calcConservativeE1RM(effWt, rp);
+          if (e1 && e1 > sessionBestE1RM) sessionBestE1RM = e1;
+          if (e1 && e1 > bestE1RM) bestE1RM = e1;
+        });
+
+        if (matchedAny) {
+          timeline.push({
+            date: w.date,
+            maxWeight: sessionMaxW,
+            e1rm: sessionBestE1RM || null,
+            volume: sessionVol
+          });
+        }
+      });
+
+      return { actualMaxWeight, actualMaxReps, bestWorkingWeight, bestWorkingReps, bestE1RM, timeline };
+    }
+
+    // ==================== DASHBOARD & CHART ====================
+    function populateExerciseDropdown() {
+      const sel = document.getElementById('dash-exercise-select');
+      const catFilter = document.getElementById('dash-category-filter').value;
+      const prev = sel.value;
+
+      const loggedIds = new Set();
+      getRealWorkouts().forEach(w => (w.exercises || []).forEach(e => loggedIds.add(e.exerciseId)));
+
+      const list = state.exercises.filter(ex => catFilter === 'ALL' || (ex.category || 'Free Weight') === catFilter);
+      sel.innerHTML = list.map(ex => {
+        const tag = loggedIds.has(ex.id) ? ' ★' : '';
+        return `<option value="${ex.id}">${getExerciseDisplayName(ex)}${tag}</option>`;
+      }).join('');
+
+      if (list.some(e => e.id === prev)) {
+        sel.value = prev;
+      } else {
+        const firstLogged = list.find(e => loggedIds.has(e.id));
+        if (firstLogged) sel.value = firstLogged.id;
+      }
+    }
+
+    function setChartMetric(metric) {
+      currentChartMetric = metric;
+      ['maxWeight', 'e1rm', 'volume'].forEach(m => {
+        const btn = document.getElementById('metric-btn-' + m);
+        btn.className = m === metric
+          ? 'px-3 py-1.5 rounded-lg text-xs font-bold themed-accent-bg'
+          : 'px-3 py-1.5 rounded-lg text-xs font-bold themed-sub';
+      });
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      populateExerciseDropdown();
+      renderBodyweightWidget();
+
+      const realWorkouts = getRealWorkouts();
+      document.getElementById('kpi-workouts').textContent = realWorkouts.length;
+
+      let totalTonnage = 0;
+      realWorkouts.forEach(w => {
+        (w.exercises || []).forEach(e => {
+          const meta = getExerciseMeta(e.exerciseId);
+          (e.sets || []).forEach(s => {
+            if (s.completed !== false && s.type !== 'warmup') {
+              totalTonnage += getEffectiveSetWeight(meta, s.weight) * (Number(s.reps) || 0);
+            }
+          });
+        });
+      });
+      document.getElementById('kpi-tonnage').textContent = `${Math.round(totalTonnage).toLocaleString()} kg`;
+
+      const selectedExId = document.getElementById('dash-exercise-select').value || 'ex_bench';
+      const pauseFilter = document.getElementById('dash-pause-filter').value || 'all';
+      const exMeta = getExerciseMeta(selectedExId);
+      const stats = getExerciseStats(selectedExId, pauseFilter);
+      const latestBw = getLatestBodyweight();
+
+      document.getElementById('kpi-actual-pr-label').textContent = `${getExerciseDisplayName(exMeta)} PR`;
+      document.getElementById('kpi-actual-pr').textContent = stats.actualMaxWeight > 0 || (exMeta.usesUserBw && stats.actualMaxReps > 0)
+        ? `${exMeta.usesUserBw ? '+' : ''}${stats.actualMaxWeight} kg × ${stats.actualMaxReps}`
+        : '—';
+      document.getElementById('kpi-working-pr').textContent = stats.bestWorkingWeight > 0
+        ? `${currentLang === 'sv' ? 'Bästa arbetsset' : 'Best working'}: ${stats.bestWorkingWeight} kg × ${stats.bestWorkingReps}`
+        : (currentLang === 'sv' ? 'Bästa arbetsset: —' : 'Best working: —');
+      document.getElementById('kpi-e1rm').textContent = stats.bestE1RM > 0 ? `${stats.bestE1RM} kg` : '—';
+
+      const relEl = document.getElementById('kpi-rel-strength');
+      if (stats.bestE1RM > 0 && latestBw && latestBw.weight > 0) {
+        const ratio = (stats.bestE1RM / latestBw.weight).toFixed(2);
+        relEl.textContent = `(${ratio}× ${currentLang === 'sv' ? 'KV' : 'BW'})`;
+      } else {
+        relEl.textContent = '';
+      }
+
+      renderProgressionChart(stats.timeline, getExerciseDisplayName(exMeta));
+      renderWeeklyVolumeBars();
+      renderAuditTable(selectedExId, pauseFilter);
+    }
+
+    function renderProgressionChart(timeline, label) {
+      const ctx = document.getElementById('progressionChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const styles = getComputedStyle(document.documentElement);
+      const lineColor = styles.getPropertyValue('--chart-line').trim() || '#3b82f6';
+      const fillColor = styles.getPropertyValue('--chart-fill').trim() || 'rgba(59,130,246,0.18)';
+      const gridColor = styles.getPropertyValue('--chart-grid').trim() || 'rgba(148,163,184,0.12)';
+      const textColor = styles.getPropertyValue('--text-muted').trim() || '#94a3b8';
+
+      const labels = timeline.length ? timeline.map(t => t.date) : [currentLang === 'sv' ? 'Inga pass ännu' : 'No sessions yet'];
+      const values = timeline.length
+        ? timeline.map(t => currentChartMetric === 'maxWeight' ? t.maxWeight : currentChartMetric === 'e1rm' ? t.e1rm : t.volume)
+        : [0];
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: `${label} (${currentChartMetric === 'maxWeight' ? 'Max kg' : currentChartMetric === 'e1rm' ? 'Est. 1RM kg' : 'Volym kg'})`,
+            data: values,
+            borderColor: lineColor,
+            backgroundColor: fillColor,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: lineColor,
+            fill: true,
+            tension: 0.25,
+            spanGaps: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: textColor, font: { family: 'Inter', weight: 'bold', size: 11 } } }
+          },
+          scales: {
+            x: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } },
+            y: { ticks: { color: textColor, font: { size: 10 } }, grid: { color: gridColor } }
+          }
+        }
+      });
+    }
+
+    function renderWeeklyVolumeBars() {
+      const muscles = [
+        { key: 'Chest', sv: 'Bröst' },
+        { key: 'Back', sv: 'Rygg' },
+        { key: 'Legs', sv: 'Ben' },
+        { key: 'Shoulders', sv: 'Axlar' },
+        { key: 'Arms', sv: 'Armar' },
+        { key: 'Core', sv: 'Bål' }
+      ];
+      const cutoff7 = Date.now() - 7 * 86400000;
+      const counts = { Chest: 0, Back: 0, Legs: 0, Shoulders: 0, Arms: 0, Core: 0 };
+
+      getRealWorkouts().forEach(w => {
+        if (new Date(w.date).getTime() < cutoff7) return;
+        (w.exercises || []).forEach(e => {
+          const meta = getExerciseMeta(e.exerciseId);
+          const workingCount = (e.sets || []).filter(s => s.completed !== false && s.type !== 'warmup').length;
+          if (counts[meta.muscle] !== undefined) counts[meta.muscle] += workingCount;
+        });
+      });
+
+      const container = document.getElementById('weekly-volume-bars');
+      container.innerHTML = muscles.map(m => {
+        const c = counts[m.key];
+        const pct = Math.min(100, Math.round((c / 20) * 100));
+        const barColor = c >= 10 && c <= 20 ? 'bg-emerald-400' : c > 20 ? 'bg-amber-400' : 'bg-blue-400';
+        return `
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-bold">
+              <span>${currentLang === 'sv' ? m.sv : m.key}</span>
+              <span class="font-mono">${c} / 10–20 set</span>
+            </div>
+            <div class="h-2 w-full rounded-full themed-sub overflow-hidden">
+              <div class="h-full ${barColor} rounded-full transition-all" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAuditTable(exerciseId, pauseFilter) {
+      const tbody = document.getElementById('audit-tbody');
+      const exMeta = getExerciseMeta(exerciseId);
+      const rows = [];
+      const sorted = [...getRealWorkouts()].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sorted.forEach(w => {
+        (w.exercises || []).forEach((ex, exIdx) => {
+          if (ex.exerciseId !== exerciseId) return;
+          (ex.sets || []).forEach((s, setIdx) => {
+            const pSec = Number(s.pauseSec) || 0;
+            if (pauseFilter === 'paused' && pSec === 0) return;
+            if (pauseFilter === 'nopause' && pSec > 0) return;
+
+            const effWt = getEffectiveSetWeight(exMeta, s.weight);
+            const e1 = s.type === 'warmup' ? null : calcConservativeE1RM(effWt, s.reps);
+            rows.push(`
+              <tr>
+                <td class="py-2.5 px-3 font-mono">${w.date}</td>
+                <td class="py-2.5 px-3 font-semibold">${w.name}</td>
+                <td class="py-2.5 px-3 font-mono font-bold">${exMeta.usesUserBw ? '+' : ''}${s.weight} kg &times; ${s.reps}</td>
+                <td class="py-2.5 px-3">
+                  <button onclick="cycleAuditPause('${w.id}', ${exIdx}, ${setIdx})" class="px-2 py-1 rounded text-[10px] font-extrabold ${pSec > 0 ? 'bg-violet-500/20 text-violet-300 border border-violet-500/40' : 'themed-sub themed-muted'}">
+                    ${pSec > 0 ? `${pSec}s Paus` : '0s'}
+                  </button>
+                </td>
+                <td class="py-2.5 px-3">
+                  <button onclick="toggleAuditWarmup('${w.id}', ${exIdx}, ${setIdx})" class="px-2 py-1 rounded text-[10px] font-extrabold uppercase ${s.type === 'warmup' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}">
+                    ${s.type || 'working'}
+                  </button>
+                </td>
+                <td class="py-2.5 px-3 font-mono">${e1 ? e1 + ' kg' : '—'}</td>
+                <td class="py-2.5 px-3 text-right">
+                  <button onclick="deleteAuditSet('${w.id}', ${exIdx}, ${setIdx})" class="p-1.5 rounded-lg themed-sub hover:text-rose-400">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                </td>
+              </tr>
+            `);
+          });
+        });
+      });
+
+      document.getElementById('audit-count-badge').textContent = `${rows.length} set`;
+      tbody.innerHTML = rows.length
+        ? rows.join('')
+        : `<tr><td colspan="7" class="py-6 text-center themed-muted">${currentLang === 'sv' ? 'Inga set loggade för denna övning ännu.' : 'No sets logged for this exercise yet.'}</td></tr>`;
+      lucide.createIcons();
+    }
+
+    function cycleAuditPause(workoutId, exIdx, setIdx) {
+      const w = state.workouts.find(item => item.id === workoutId && !item.isTrial);
+      if (!w) return;
+      const s = w.exercises[exIdx].sets[setIdx];
+      s.pauseSec = ((Number(s.pauseSec) || 0) + 1) % 4;
+      saveState();
+      renderDashboard();
+    }
+
+    function toggleAuditWarmup(workoutId, exIdx, setIdx) {
+      const w = state.workouts.find(item => item.id === workoutId && !item.isTrial);
+      if (!w) return;
+      const s = w.exercises[exIdx].sets[setIdx];
+      s.type = s.type === 'warmup' ? 'working' : 'warmup';
+      saveState();
+      renderDashboard();
+    }
+
+    function deleteAuditSet(workoutId, exIdx, setIdx) {
+      const w = state.workouts.find(item => item.id === workoutId && !item.isTrial);
+      if (!w) return;
+      w.exercises[exIdx].sets.splice(setIdx, 1);
+      if (w.exercises[exIdx].sets.length === 0) w.exercises.splice(exIdx, 1);
+      if (w.exercises.length === 0) state.workouts = state.workouts.filter(item => item.id !== workoutId);
+      saveState();
+      renderDashboard();
+    }
+
+    // ==================== SMART OPTIMIZER ====================
+    function runOptimizer(goal = 'auto') {
+      const prescriptions = [];
+      state.exercises.forEach(ex => {
+        const stats = getExerciseStats(ex.id, 'all');
+        if (stats.actualMaxWeight <= 0 && !(ex.usesUserBw && stats.actualMaxReps > 0)) return;
+
+        const baseE1RM = stats.bestE1RM || getEffectiveSetWeight(ex, stats.actualMaxWeight);
+        let repMin = ex.repRange ? ex.repRange[0] : 8;
+        let repMax = ex.repRange ? ex.repRange[1] : 10;
+
+        if (goal === 'strength') { repMin = 3; repMax = 5; }
+        else if (goal === 'hypertrophy') { repMin = 8; repMax = 10; }
+        else if (goal === 'volume') { repMin = 10; repMax = 12; }
+
+        let targetWeight = inverseBrzyckiWeight(baseE1RM, repMin);
+        if (ex.usesUserBw) {
+          const bw = getLatestBodyweight();
+          targetWeight = Math.max(0, Math.round((targetWeight - (bw ? bw.weight : 0)) / 2.5) * 2.5);
+        }
+
+        prescriptions.push({
+          exercise: ex,
+          stats,
+          targetWeight,
+          targetRepsText: `${repMin}–${repMax}`
+        });
+      });
+      return { prescriptions };
+    }
+
+    function renderOptimizer() {
+      const goal = document.getElementById('optimizer-goal-select').value;
+      const cat = document.getElementById('optimizer-cat-filter').value;
+      const { prescriptions } = runOptimizer(goal);
+      const filtered = prescriptions.filter(p => cat === 'ALL' || (p.exercise.category || 'Free Weight') === cat);
+      const grid = document.getElementById('optimizer-grid');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full themed-card border rounded-2xl p-8 text-center space-y-2">
+            <p class="text-sm font-extrabold">${currentLang === 'sv' ? 'Inga riktiga träningspass loggade ännu' : 'No real workout baselines logged yet'}</p>
+            <p class="text-xs themed-muted">${currentLang === 'sv' ? 'Logga ditt första pass (eller importera CSV) för att få individanpassade målvikter.' : 'Log your first real session (or import CSV) to unlock individualized targets.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="themed-card border rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-extrabold">${getExerciseDisplayName(p.exercise)}</h3>
+              <div class="flex items-center gap-1.5 mt-1">
+                ${getEquipmentBadgeHtml(p.exercise.category)}
+                <span class="text-[11px] themed-muted">${p.exercise.muscle}</span>
+              </div>
+            </div>
+            <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg themed-sub">e1RM: ${p.stats.bestE1RM || p.stats.actualMaxWeight} kg</span>
+          </div>
+
+          <div class="p-3 rounded-xl themed-sub border flex items-center justify-between">
+            <div>
+              <div class="text-[10px] uppercase font-bold themed-muted">${currentLang === 'sv' ? 'Nästa Mål' : 'Next Target'}</div>
+              <div class="text-base font-extrabold font-mono themed-accent-text">${p.exercise.usesUserBw ? '+' : ''}${p.targetWeight} kg &times; ${p.targetRepsText}</div>
+            </div>
+            <div class="text-right text-[11px] themed-muted">
+              <div>PR: ${p.stats.actualMaxWeight} kg &times; ${p.stats.actualMaxReps}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==================== WORKOUT LOGGER, WARM-UP RAMP, SUPERSETS & CUSTOM TEMPLATES ====================
+    function renderCustomTemplatesGrid() {
+      const section = document.getElementById('custom-templates-section');
+      const grid = document.getElementById('custom-templates-grid');
+      if (!state.customTemplates || state.customTemplates.length === 0) {
+        section.classList.add('hidden');
+        return;
+      }
+      section.classList.remove('hidden');
+      grid.innerHTML = state.customTemplates.map((tpl, idx) => `
+        <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/35 flex items-start justify-between gap-2">
+          <button type="button" onclick="startFromCustomTemplate(${idx})" class="text-left flex-1">
+            <div class="text-[10px] font-extrabold uppercase text-emerald-400">${currentLang === 'sv' ? 'EGEN MALL' : 'CUSTOM TEMPLATE'}</div>
+            <div class="text-sm font-bold mt-0.5">${tpl.name}</div>
+            <div class="text-[11px] themed-muted mt-0.5">${tpl.exerciseIds.length} ${currentLang === 'sv' ? 'övningar' : 'exercises'}</div>
+          </button>
+          <button type="button" onclick="deleteCustomTemplate(${idx})" class="p-1.5 themed-muted hover:text-rose-400">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function saveCurrentAsTemplate() {
+      if (!state.activeSession || state.activeSession.exercises.length === 0) {
+        showToast(currentLang === 'sv' ? 'Lägg till övningar innan du sparar en mall.' : 'Add exercises before saving a template.');
+        return;
+      }
+      const name = (document.getElementById('session-title-input').value || state.activeSession.name || 'Custom Split').trim();
+      const exerciseIds = state.activeSession.exercises.map(e => e.exerciseId);
+      state.customTemplates.push({ id: 'tpl_' + Date.now(), name, exerciseIds });
+      saveState();
+      showToast(currentLang === 'sv' ? `Mall sparad: "${name}"` : `Saved template: "${name}"`);
+    }
+
+    function startFromCustomTemplate(idx) {
+      const tpl = state.customTemplates[idx];
+      if (!tpl) return;
+      startSession(tpl.name, tpl.exerciseIds, false);
+    }
+
+    function deleteCustomTemplate(idx) {
+      state.customTemplates.splice(idx, 1);
+      saveState();
+      renderCustomTemplatesGrid();
+    }
+
+    function renderLoggerView() {
+      const launcher = document.getElementById('logger-launcher');
+      const active = document.getElementById('logger-active');
+
+      if (!state.activeSession) {
+        launcher.classList.remove('hidden');
+        active.classList.add('hidden');
+        renderCustomTemplatesGrid();
+        return;
+      }
+
+      launcher.classList.add('hidden');
+      active.classList.remove('hidden');
+
+      const isTrial = Boolean(state.activeSession.isTrial);
+      document.getElementById('trial-active-banner').classList.toggle('hidden', !isTrial);
+      document.getElementById('discard-session-btn').textContent = currentLang === 'sv'
+        ? (isTrial ? 'Avbryt Test' : 'Avbryt')
+        : (isTrial ? 'Discard Trial' : 'Discard');
+
+      const finishBtn = document.getElementById('finish-session-btn');
+      finishBtn.textContent = currentLang === 'sv'
+        ? (isTrial ? 'Avsluta Testpass' : 'Slutför & Spara')
+        : (isTrial ? 'Finish Trial' : 'Finish & Save');
+      finishBtn.className = isTrial
+        ? 'px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold shadow-lg transition'
+        : 'px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-lg transition';
+
+      document.getElementById('session-title-input').value = state.activeSession.name;
+      document.getElementById('session-date-input').value = state.activeSession.date;
+
+      renderActiveExercises();
+      renderExercisePicker();
+    }
+
+    function launchSampleTrialWorkout() {
+      smithConfig.presetId = 'technogym';
+      smithConfig.barWeight = 15;
+      saveSmithConfig();
+
+      state.activeSession = {
+        id: 'wk_trial_' + Date.now(),
+        name: currentLang === 'sv' ? 'Exempel-Push (Testpass)' : 'Sample Trial Push (Sandbox)',
+        date: new Date().toISOString().slice(0, 10),
+        isTrial: true,
+        exercises: [
+          {
+            exerciseId: 'ex_bench',
+            supersetGroup: null,
+            targetNote: currentLang === 'sv'
+              ? 'Demo: Testa Uppvärmningsknappen eller bocka av seten för att se den smarta vilotimern!'
+              : 'Demo: Try the Warm-Up Ramp button or check off sets to test the Smart Rest Timer!',
+            sets: [
+              { weight: 50, reps: 8, pauseSec: 0, rpe: 6, type: 'warmup', completed: false },
+              { weight: 80, reps: 3, pauseSec: 0, rpe: 9, type: 'working', completed: false },
+              { weight: 70, reps: 6, pauseSec: 2, rpe: 8.5, type: 'working', completed: false }
+            ]
+          },
+          {
+            exerciseId: 'ex_smith_incline_bench',
+            supersetGroup: null,
+            targetNote: 'Technogym 15 kg + 40 kg = 55 kg Total',
+            sets: [
+              { weight: 55, reps: 8, pauseSec: 0, rpe: 8, type: 'working', completed: false },
+              { weight: 55, reps: 9, pauseSec: 1, rpe: 9, type: 'working', completed: false }
+            ]
+          },
+          {
+            exerciseId: 'ex_tricep_pushdown',
+            supersetGroup: null,
+            targetNote: currentLang === 'sv' ? 'Demo: Isolationsövning (kortare vila)' : 'Demo: Isolation Hypertrophy (shorter recovery)',
+            sets: [
+              { weight: 25, reps: 12, pauseSec: 0, rpe: 8, type: 'working', completed: false },
+              { weight: 25, reps: 12, pauseSec: 0, rpe: 9.5, type: 'failure', completed: false }
+            ]
+          }
+        ]
+      };
+      saveState();
+      switchTab('logger');
+      showToast(currentLang === 'sv'
+        ? 'Exempel-testpass startat — bocka av ett set för att testa vilotimern!'
+        : 'Sample Trial Push started — check off a set to test the rest timer!');
+    }
+
+    function startSession(name, exerciseIds, isTrial = false) {
+      const goal = document.getElementById('logger-goal-select').value;
+      const { prescriptions } = runOptimizer(goal);
+
+      const exercises = exerciseIds.map(exId => {
+        const meta = getExerciseMeta(exId);
+        const presc = prescriptions.find(p => p.exercise.id === exId);
+        const w = presc ? presc.targetWeight : (meta.usesUserBw ? 0 : (meta.category === 'Smith Machine' ? Math.max(smithConfig.barWeight, 20) : 20));
+        const r = meta.repRange ? meta.repRange[0] : 8;
+        const p = meta.defaultPauseSec || 0;
+
+        return {
+          exerciseId: exId,
+          supersetGroup: null,
+          targetNote: presc ? `${currentLang === 'sv' ? 'Mål' : 'Target'}: ${presc.targetWeight} kg × ${presc.targetRepsText}` : `${currentLang === 'sv' ? 'Baslinje' : 'Baseline'}: 3 × ${r} reps`,
+          sets: [
+            { weight: w, reps: r, pauseSec: p, rpe: 8, type: 'working', completed: false },
+            { weight: w, reps: r, pauseSec: p, rpe: 8.5, type: 'working', completed: false },
+            { weight: w, reps: r, pauseSec: p, rpe: 9, type: 'working', completed: false }
+          ]
+        };
+      });
+
+      state.activeSession = {
+        id: (isTrial ? 'wk_trial_' : 'wk_') + Date.now(),
+        name,
+        date: new Date().toISOString().slice(0, 10),
+        isTrial: Boolean(isTrial),
+        exercises
+      };
+      saveState();
+      renderLoggerView();
+    }
+
+    function updateSessionMeta() {
+      if (!state.activeSession) return;
+      state.activeSession.name = document.getElementById('session-title-input').value || 'Workout Session';
+      state.activeSession.date = document.getElementById('session-date-input').value || new Date().toISOString().slice(0, 10);
+      saveState();
+    }
+
+    // Warm-Up Ramp Generator
+    function generateWarmupRamp(exIdx) {
+      const exEntry = state.activeSession.exercises[exIdx];
+      const meta = getExerciseMeta(exEntry.exerciseId);
+      const firstWork = exEntry.sets.find(s => s.type !== 'warmup') || exEntry.sets[0] || { weight: 40 };
+      const topW = Number(firstWork.weight) || 40;
+      const barW = meta.category === 'Smith Machine' ? smithConfig.barWeight : (meta.category === 'Free Weight' ? 20 : 10);
+
+      let ramp = [];
+      if (meta.usesUserBw) {
+        ramp = [
+          { weight: 0, reps: 6, pauseSec: 0, rpe: 5, type: 'warmup', completed: false },
+          { weight: Math.max(0, Math.round((topW * 0.5) / 2.5) * 2.5), reps: 3, pauseSec: 0, rpe: 6, type: 'warmup', completed: false }
+        ];
+      } else if (topW <= barW + 5) {
+        ramp = [
+          { weight: Math.max(2.5, Math.round((topW * 0.5) / 2.5) * 2.5), reps: 8, pauseSec: 0, rpe: 5, type: 'warmup', completed: false },
+          { weight: Math.max(2.5, Math.round((topW * 0.75) / 2.5) * 2.5), reps: 4, pauseSec: 0, rpe: 6, type: 'warmup', completed: false }
+        ];
+      } else {
+        const w50 = Math.max(barW, Math.round((topW * 0.5) / 2.5) * 2.5);
+        const w70 = Math.max(w50, Math.round((topW * 0.7) / 2.5) * 2.5);
+        const w85 = Math.max(w70, Math.round((topW * 0.85) / 2.5) * 2.5);
+        ramp = [
+          { weight: barW, reps: 8, pauseSec: 0, rpe: 5, type: 'warmup', completed: false },
+          { weight: w50, reps: 5, pauseSec: 0, rpe: 5.5, type: 'warmup', completed: false },
+          { weight: w70, reps: 3, pauseSec: 0, rpe: 6.5, type: 'warmup', completed: false }
+        ];
+        if (w85 < topW) {
+          ramp.push({ weight: w85, reps: 1, pauseSec: 0, rpe: 7, type: 'warmup', completed: false });
+        }
+      }
+
+      // Remove existing uncompleted warmups before prepending new ramp
+      exEntry.sets = [...ramp, ...exEntry.sets.filter(s => s.type !== 'warmup' || s.completed)];
+      saveState();
+      renderActiveExercises();
+      showToast(currentLang === 'sv' ? `Skapade ${ramp.length} uppvärmningsset!` : `Generated ${ramp.length} warm-up sets!`);
+    }
+
+    // Superset Linking
+    function toggleSupersetWithNext(exIdx) {
+      const list = state.activeSession.exercises;
+      if (exIdx >= list.length - 1) return;
+      const curr = list[exIdx];
+      const next = list[exIdx + 1];
+
+      if (curr.supersetGroup && curr.supersetGroup === next.supersetGroup) {
+        curr.supersetGroup = null;
+        next.supersetGroup = null;
+      } else {
+        const groupCode = 'SS-' + (exIdx + 1);
+        curr.supersetGroup = groupCode;
+        next.supersetGroup = groupCode;
+      }
+      saveState();
+      renderActiveExercises();
+    }
+
+    // Real-Time RPE Fatigue Auto-Regulation
+    function applyRpeLoadDrop(exIdx) {
+      const exEntry = state.activeSession.exercises[exIdx];
+      let updated = 0;
+      exEntry.sets.forEach(s => {
+        if (!s.completed && s.type !== 'warmup') {
+          s.weight = Math.max(0, Math.round((Number(s.weight) - 2.5) * 2) / 2);
+          updated++;
+        }
+      });
+      exEntry.rpeAlertDismissed = true;
+      saveState();
+      renderActiveExercises();
+      showToast(currentLang === 'sv' ? `Sänkte vikten med 2.5 kg på ${updated} kvarvarande set` : `Dropped 2.5 kg across ${updated} remaining sets`);
+    }
+
+    function renderActiveExercises() {
+      const container = document.getElementById('active-exercises-container');
+      if (!state.activeSession || state.activeSession.exercises.length === 0) {
+        container.innerHTML = `<div class="themed-card border rounded-2xl p-8 text-center text-xs themed-muted">${currentLang === 'sv' ? 'Inga övningar tillagda ännu. Välj en nedan.' : 'No exercises added yet. Pick one below.'}</div>`;
+        return;
+      }
+
+      container.innerHTML = state.activeSession.exercises.map((exEntry, exIdx) => {
+        const meta = getExerciseMeta(exEntry.exerciseId);
+        const isSmith = meta.category === 'Smith Machine';
+        const nextEx = state.activeSession.exercises[exIdx + 1];
+        const isSupersetLinkedNext = Boolean(exEntry.supersetGroup && nextEx && nextEx.supersetGroup === exEntry.supersetGroup);
+
+        // Check real-time RPE >= 9.5 fatigue alert
+        const hasHighRpeCompleted = exEntry.sets.some(s => s.completed && s.type !== 'warmup' && Number(s.rpe) >= 9.5);
+        const hasRemainingWorkSets = exEntry.sets.some(s => !s.completed && s.type !== 'warmup');
+        const showRpeAlert = hasHighRpeCompleted && hasRemainingWorkSets && !exEntry.rpeAlertDismissed;
+
+        const rpeBannerHtml = showRpeAlert ? `
+          <div class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400 shrink-0"></i>
+              <span>${t('rpeAlertTitle')}</span>
+            </div>
+            <button type="button" onclick="applyRpeLoadDrop(${exIdx})" class="px-3 py-1.5 rounded-lg bg-rose-500 text-white text-[11px] font-extrabold self-start sm:self-center">
+              ${t('rpeAlertApply')}
+            </button>
+          </div>
+        ` : '';
+
+        const smithHelperHtml = isSmith ? `
+          <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-[11px] font-extrabold text-cyan-400 flex items-center gap-1">
+                <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Smith (${smithConfig.barWeight} kg)
+              </span>
+              <select onchange="updateSmithPreset(this.value)" class="px-2 py-1 rounded-lg themed-card border text-[11px] font-bold max-w-full">
+                ${SMITH_PRESETS.map(p => `<option value="${p.id}" ${smithConfig.presetId === p.id ? 'selected' : ''}>${currentLang === 'sv' ? p.labelSv : p.labelEn}</option>`).join('')}
+              </select>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-[11px]">
+              <label class="font-bold">Bar:</label>
+              <input type="number" step="0.5" value="${smithConfig.barWeight}" onchange="updateCustomSmithBar(this.value)" class="w-16 px-2 py-1.5 rounded-lg themed-card border font-mono font-bold text-center" />
+              <label class="font-bold">+ ${currentLang === 'sv' ? 'Skivor/sida' : 'Plates/side'}:</label>
+              <input type="number" step="1.25" id="smith-side-${exIdx}" placeholder="20" class="w-20 px-2 py-1.5 rounded-lg themed-card border font-mono font-bold text-center" />
+              <button type="button" onclick="applySmithPlateCalc(${exIdx})" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-extrabold">${currentLang === 'sv' ? 'Applicera' : 'Apply'}</button>
+            </div>
+          </div>
+        ` : '';
+
+        // Mobile-First One-Handed Set Cards
+        const setsHtml = exEntry.sets.map((s, setIdx) => {
+          const pSec = Number(s.pauseSec) || 0;
+          return `
+            <div class="p-2.5 sm:p-3 rounded-xl ${s.completed ? 'bg-emerald-500/10 border border-emerald-500/40' : 'themed-sub border'} space-y-2">
+              <!-- Top Row: Set # + Type + Pause + RPE + Complete Button -->
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="w-6 h-6 rounded-lg themed-card border flex items-center justify-center font-mono text-xs font-extrabold">${setIdx + 1}</span>
+                  <select onchange="updateSetField(${exIdx}, ${setIdx}, 'type', this.value)" class="px-2 py-1 rounded-lg themed-card border text-[11px] font-bold">
+                    <option value="working" ${s.type === 'working' ? 'selected' : ''}>${currentLang === 'sv' ? 'Arbete' : 'Work'}</option>
+                    <option value="warmup" ${s.type === 'warmup' ? 'selected' : ''}>${currentLang === 'sv' ? 'Uppvärm' : 'Warm'}</option>
+                    <option value="drop" ${s.type === 'drop' ? 'selected' : ''}>Drop</option>
+                    <option value="failure" ${s.type === 'failure' ? 'selected' : ''}>Failure</option>
+                  </select>
+                  <select onchange="updateSetField(${exIdx}, ${setIdx}, 'pauseSec', Number(this.value))" class="px-2 py-1 rounded-lg themed-card border text-[11px] font-bold ${pSec > 0 ? 'text-violet-400' : ''}">
+                    <option value="0" ${pSec === 0 ? 'selected' : ''}>0s</option>
+                    <option value="1" ${pSec === 1 ? 'selected' : ''}>1s Paus</option>
+                    <option value="2" ${pSec === 2 ? 'selected' : ''}>2s Paus</option>
+                    <option value="3" ${pSec === 3 ? 'selected' : ''}>3s+ Paus</option>
+                  </select>
+                  <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg themed-card border text-[11px]">
+                    <span class="themed-muted font-bold">RPE</span>
+                    <input type="number" step="0.5" min="5" max="10" value="${s.rpe || 8}" onchange="updateSetField(${exIdx}, ${setIdx}, 'rpe', Number(this.value))" class="w-9 bg-transparent font-mono font-extrabold text-center" />
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="toggleSetCompleted(${exIdx}, ${setIdx})" class="h-9 px-3 rounded-xl flex items-center justify-center gap-1 text-xs font-extrabold transition ${s.completed ? 'bg-emerald-500 text-slate-950 shadow-md' : 'themed-card border hover:border-emerald-400'}">
+                    <span>&check;</span>
+                  </button>
+                  <button type="button" onclick="removeSetFromSession(${exIdx}, ${setIdx})" class="p-2 themed-muted hover:text-rose-400">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bottom Row: One-Handed Touch Steppers for Weight & Reps -->
+              <div class="grid grid-cols-2 gap-2">
+                <!-- Weight Stepper -->
+                <div class="flex items-center justify-between rounded-xl themed-card border p-1">
+                  <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'weight', -2.5)" class="w-9 h-9 rounded-lg themed-sub font-mono text-xs font-extrabold active:scale-95">-2.5</button>
+                  <div class="text-center">
+                    <input type="number" step="0.5" value="${s.weight}" onchange="updateSetField(${exIdx}, ${setIdx}, 'weight', Number(this.value))" class="w-16 bg-transparent font-mono text-sm font-extrabold text-center" />
+                    <span class="block text-[9px] uppercase themed-muted font-bold">${meta.usesUserBw ? '+kg (BW)' : 'kg'}</span>
+                  </div>
+                  <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'weight', 2.5)" class="w-9 h-9 rounded-lg themed-sub font-mono text-xs font-extrabold active:scale-95">+2.5</button>
+                </div>
+
+                <!-- Reps Stepper -->
+                <div class="flex items-center justify-between rounded-xl themed-card border p-1">
+                  <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'reps', -1)" class="w-9 h-9 rounded-lg themed-sub font-mono text-sm font-extrabold active:scale-95">-1</button>
+                  <div class="text-center">
+                    <input type="number" value="${s.reps}" onchange="updateSetField(${exIdx}, ${setIdx}, 'reps', Number(this.value))" class="w-12 bg-transparent font-mono text-sm font-extrabold text-center" />
+                    <span class="block text-[9px] uppercase themed-muted font-bold">reps</span>
+                  </div>
+                  <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'reps', 1)" class="w-9 h-9 rounded-lg themed-sub font-mono text-sm font-extrabold active:scale-95">+1</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="themed-card border ${exEntry.supersetGroup ? 'border-violet-500/50' : ''} rounded-2xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <h3 class="text-sm font-extrabold">${getExerciseDisplayName(meta)}</h3>
+                  ${getEquipmentBadgeHtml(meta.category)}
+                  ${exEntry.supersetGroup ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40">SUPERSET</span>` : ''}
+                </div>
+                <p class="text-[11px] themed-muted mt-0.5">${exEntry.targetNote || ''}</p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" onclick="generateWarmupRamp(${exIdx})" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-400 text-[11px] font-extrabold flex items-center gap-1">
+                  <i data-lucide="flame" class="w-3.5 h-3.5"></i> ${t('warmupBtn')}
+                </button>
+                ${nextEx ? `
+                  <button type="button" onclick="toggleSupersetWithNext(${exIdx})" class="px-2.5 py-1.5 rounded-xl ${isSupersetLinkedNext ? 'bg-violet-500/25 border-violet-400 text-violet-300' : 'themed-sub'} border text-[11px] font-bold flex items-center gap-1">
+                    <i data-lucide="link" class="w-3 h-3"></i> ${isSupersetLinkedNext ? t('unlinkSupersetBtn') : t('linkSupersetBtn')}
+                  </button>
+                ` : ''}
+                <button type="button" onclick="removeExerciseFromSession(${exIdx})" class="p-1.5 rounded-xl themed-sub themed-muted hover:text-rose-400">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            ${rpeBannerHtml}
+            ${smithHelperHtml}
+
+            <div class="space-y-2">${setsHtml}</div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="addSetToSession(${exIdx})" class="py-2.5 rounded-xl themed-sub border text-xs font-extrabold hover:opacity-80 transition">
+                ${t('addSetBtn')}
+              </button>
+              <button type="button" onclick="duplicateLastSet(${exIdx})" class="py-2.5 rounded-xl themed-sub border text-xs font-bold hover:opacity-80 transition flex items-center justify-center gap-1">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i> ${t('dupSetBtn')}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function stepSetField(exIdx, setIdx, field, delta) {
+      const s = state.activeSession.exercises[exIdx].sets[setIdx];
+      const nextVal = Math.max(field === 'reps' ? 1 : 0, Math.round(((Number(s[field]) || 0) + delta) * 10) / 10);
+      s[field] = nextVal;
+      saveState();
+      renderActiveExercises();
+    }
+
+    function duplicateLastSet(exIdx) {
+      const sets = state.activeSession.exercises[exIdx].sets;
+      if (sets.length === 0) return;
+      const last = sets[sets.length - 1];
+      sets.push({ ...last, completed: false });
+      saveState();
+      renderActiveExercises();
+    }
+
+    function updateSmithPreset(presetId) {
+      const preset = SMITH_PRESETS.find(p => p.id === presetId);
+      smithConfig.presetId = presetId;
+      if (preset && presetId !== 'custom') smithConfig.barWeight = preset.weight;
+      saveSmithConfig();
+      renderActiveExercises();
+    }
+
+    function updateCustomSmithBar(val) {
+      smithConfig.presetId = 'custom';
+      smithConfig.barWeight = Math.max(0, Number(val) || 0);
+      saveSmithConfig();
+      renderActiveExercises();
+    }
+
+    function applySmithPlateCalc(exIdx) {
+      const sideKg = Number(document.getElementById(`smith-side-${exIdx}`)?.value) || 0;
+      const totalKg = smithConfig.barWeight + (sideKg * 2);
+      state.activeSession.exercises[exIdx].sets.forEach(s => { if (s.type !== 'warmup') s.weight = totalKg; });
+      saveState();
+      renderActiveExercises();
+      showToast(`${totalKg} kg (${smithConfig.barWeight} kg + ${sideKg * 2} kg)`);
+    }
+
+    function updateSetField(exIdx, setIdx, field, val) {
+      state.activeSession.exercises[exIdx].sets[setIdx][field] = val;
+      saveState();
+      if (field === 'rpe') renderActiveExercises();
+    }
+
+    function addSetToSession(exIdx) {
+      const sets = state.activeSession.exercises[exIdx].sets;
+      const last = sets[sets.length - 1] || { weight: 20, reps: 8, pauseSec: 0, rpe: 8, type: 'working' };
+      sets.push({ ...last, completed: false });
+      saveState();
+      renderActiveExercises();
+    }
+
+    function removeSetFromSession(exIdx, setIdx) {
+      state.activeSession.exercises[exIdx].sets.splice(setIdx, 1);
+      saveState();
+      renderActiveExercises();
+    }
+
+    function removeExerciseFromSession(exIdx) {
+      state.activeSession.exercises.splice(exIdx, 1);
+      saveState();
+      renderActiveExercises();
+    }
+
+    function toggleSetCompleted(exIdx, setIdx) {
+      const exEntry = state.activeSession.exercises[exIdx];
+      const setObj = exEntry.sets[setIdx];
+      setObj.completed = !setObj.completed;
+      saveState();
+      renderActiveExercises();
+
+      if (setObj.completed && restSettings.autoStart) {
+        // Superset check: if part of a superset, only trigger timer when partner exercise has equal/more completed sets
+        if (exEntry.supersetGroup) {
+          const peers = state.activeSession.exercises.filter(e => e.supersetGroup === exEntry.supersetGroup);
+          const myCompletedCount = exEntry.sets.filter(s => s.completed).length;
+          const partnerBehind = peers.some(p => p !== exEntry && p.sets.filter(s => s.completed).length < myCompletedCount);
+          if (partnerBehind) {
+            showToast(currentLang === 'sv' ? 'Superset: Kör partnerövningen innan vilotimern startar!' : 'Superset: Complete partner exercise before rest timer starts!');
+            return;
+          }
+        }
+
+        const meta = getExerciseMeta(exEntry.exerciseId);
+        const smart = calculateSmartRestDuration(meta, setObj);
+        startSmartRestCountdown(smart.seconds, {
+          label: getExerciseDisplayName(meta),
+          summary: `${meta.usesUserBw ? '+' : ''}${setObj.weight} kg × ${setObj.reps} reps${setObj.pauseSec > 0 ? ` (${setObj.pauseSec}s paus)` : ''}`,
+          rationale: smart.rationale
+        });
+      }
+    }
+
+    function setPickerCategory(cat) {
+      pickerCategoryFilter = cat;
+      document.querySelectorAll('.pcat-btn').forEach(btn => {
+        btn.classList.toggle('themed-accent-bg', btn.getAttribute('data-pcat') === cat);
+      });
+      renderExercisePicker();
+    }
+
+    function renderExercisePicker() {
+      const q = (document.getElementById('exercise-search-input')?.value || '').toLowerCase();
+      const filtered = state.exercises.filter(ex => {
+        const catOk = pickerCategoryFilter === 'ALL' || (ex.category || 'Free Weight') === pickerCategoryFilter;
+        const textOk = ex.name.toLowerCase().includes(q) || (ex.nameSv || '').toLowerCase().includes(q) || ex.muscle.toLowerCase().includes(q);
+        return catOk && textOk;
+      });
+
+      document.getElementById('exercise-picker-grid').innerHTML = filtered.map(ex => `
+        <button type="button" onclick="addExerciseToSession('${ex.id}')" class="p-3 rounded-xl themed-sub border hover:border-emerald-400 text-left flex items-center justify-between gap-2 transition">
+          <div class="min-w-0">
+            <div class="text-xs font-extrabold truncate">${getExerciseDisplayName(ex)}</div>
+            <div class="flex items-center gap-1.5 mt-1">
+              ${getEquipmentBadgeHtml(ex.category)}
+              <span class="text-[10px] themed-muted">${ex.muscle}</span>
+            </div>
+          </div>
+          <i data-lucide="plus" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+        </button>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    function addExerciseToSession(exId) {
+      const meta = getExerciseMeta(exId);
+      const w = meta.usesUserBw ? 0 : (meta.category === 'Smith Machine' ? Math.max(smithConfig.barWeight, 20) : 20);
+      const r = meta.repRange ? meta.repRange[0] : 8;
+      state.activeSession.exercises.push({
+        exerciseId: exId,
+        supersetGroup: null,
+        targetNote: `${currentLang === 'sv' ? 'Baslinje' : 'Baseline'}: 3 × ${r} reps`,
+        sets: [
+          { weight: w, reps: r, pauseSec: meta.defaultPauseSec || 0, rpe: 8, type: 'working', completed: false },
+          { weight: w, reps: r, pauseSec: meta.defaultPauseSec || 0, rpe: 8.5, type: 'working', completed: false },
+          { weight: w, reps: r, pauseSec: meta.defaultPauseSec || 0, rpe: 9, type: 'working', completed: false }
+        ]
+      });
+      saveState();
+      renderActiveExercises();
+    }
+
+    function discardSession() {
+      state.activeSession = null;
+      saveState();
+      dismissSmartRestOverlay();
+      renderLoggerView();
+    }
+
+    function finishSession() {
+      if (!state.activeSession || state.activeSession.exercises.length === 0) {
+        showToast(currentLang === 'sv' ? 'Lägg till minst en övning först.' : 'Add at least one exercise first.');
+        return;
+      }
+      const wasTrial = Boolean(state.activeSession.isTrial);
+      state.workouts.push(state.activeSession);
+      state.activeSession = null;
+      saveState();
+      dismissSmartRestOverlay();
+
+      if (wasTrial) {
+        showToast(currentLang === 'sv' ? 'Testpass sparat i sandlådan (riktiga PR orörda).' : 'Trial saved to Sandbox Log (real stats untouched).');
+        switchTab('history');
+      } else {
+        showToast(currentLang === 'sv' ? 'Träningspass sparat! PR & veckovolym uppdaterade.' : 'Workout saved! PRs & volume updated.');
+        switchTab('dashboard');
+      }
+    }
+
+    // ==================== WEIGHT- & REP-CORRELATED SMART REST TIMER ====================
+    function calculateSmartRestDuration(exMeta, setObj) {
+      const effWeight = getEffectiveSetWeight(exMeta, setObj.weight);
+      const reps = Number(setObj.reps) || 8;
+      const rpe = Number(setObj.rpe) || 8;
+      const pauseSec = Number(setObj.pauseSec) || 0;
+      const type = setObj.type || 'working';
+      const reasons = [];
+
+      if (type === 'warmup') {
+        return { seconds: 60, rationale: currentLang === 'sv' ? 'Uppvärmningsset • Snabb förberedelse → 1:00' : 'Warmup Set • Fast Prep → 1:00' };
+      }
+      if (type === 'drop') {
+        return { seconds: 45, rationale: currentLang === 'sv' ? 'Dropset • Metabolisk täthet → 0:45' : 'Drop Set • Metabolic Density → 0:45' };
+      }
+
+      const stats = getExerciseStats(exMeta.id, 'all');
+      const ref1RM = stats.bestE1RM || getEffectiveSetWeight(exMeta, stats.actualMaxWeight) || calcConservativeE1RM(effWeight, reps) || effWeight;
+      const intensityPct = ref1RM > 0 ? Math.min(100, Math.round((effWeight / ref1RM) * 100)) : 75;
+
+      let baseSec = 120;
+      if (reps <= 3 || intensityPct >= 88) {
+        baseSec = 210;
+        reasons.push(`${intensityPct}% e1RM ${currentLang === 'sv' ? 'Maxstyrka' : 'Max Strength'}`);
+      } else if (reps <= 6 || intensityPct >= 80) {
+        baseSec = 165;
+        reasons.push(`${intensityPct}% e1RM ${currentLang === 'sv' ? 'Styrkezon' : 'Strength Zone'}`);
+      } else if (reps <= 10) {
+        baseSec = 120;
+        reasons.push(`${reps} reps Hypertrofi`);
+      } else {
+        baseSec = 75;
+        reasons.push(`${reps} reps ${currentLang === 'sv' ? 'Uthållighet' : 'Metabolic'}`);
+      }
+
+      if (exMeta.compound) {
+        baseSec += 30;
+        reasons.push(currentLang === 'sv' ? 'Basövning (+30s)' : 'Compound (+30s)');
+      }
+      if (pauseSec > 0) {
+        baseSec += 15;
+        reasons.push(`${pauseSec}s Paus (+15s)`);
+      }
+      if (rpe >= 9 || type === 'failure') {
+        baseSec += 15;
+        reasons.push(`@${rpe} RPE (+15s)`);
+      }
+
+      const clamped = Math.max(45, Math.min(300, Math.round(baseSec / 15) * 15));
+      const mins = Math.floor(clamped / 60);
+      const secs = String(clamped % 60).padStart(2, '0');
+      reasons.push(`→ ${mins}:${secs}`);
+
+      return { seconds: clamped, rationale: reasons.join(' • ') };
+    }
+
+    function startSmartRestCountdown(seconds, context) {
+      clearInterval(restTimerInterval);
+      restTotalSec = seconds;
+      restRemainingSec = seconds;
+      restPaused = false;
+
+      const overlay = document.getElementById('smart-rest-overlay');
+      const isTrial = Boolean(state.activeSession && state.activeSession.isTrial);
+      overlay.classList.remove('hidden', 'animate-pulse');
+      overlay.classList.toggle('border-amber-400', isTrial);
+      overlay.classList.toggle('border-emerald-500/40', !isTrial);
+
+      document.getElementById('smart-rest-status-badge').textContent = currentLang === 'sv' ? 'Smart Vila' : 'Smart Rest';
+      document.getElementById('smart-rest-trial-badge').classList.toggle('hidden', !isTrial);
+      document.getElementById('smart-rest-exercise').textContent = context.label || 'Recovery Timer';
+      document.getElementById('smart-rest-set-summary').textContent = context.summary || '';
+      document.getElementById('smart-rest-rationale').textContent = context.rationale || '';
+      document.getElementById('rest-pause-btn').textContent = currentLang === 'sv' ? 'Pausa' : 'Pause';
+
+      updateSmartRestDisplay();
+
+      restTimerInterval = setInterval(() => {
+        if (restPaused) return;
+        restRemainingSec--;
+        updateSmartRestDisplay();
+        if (restRemainingSec <= 0) {
+          clearInterval(restTimerInterval);
+          overlay.classList.add('animate-pulse');
+          document.getElementById('smart-rest-status-badge').textContent = currentLang === 'sv' ? 'Redo för nästa set!' : 'Ready for Next Set!';
+          playRestCompletionBeep();
+        }
+      }, 1000);
+    }
+
+    function updateSmartRestDisplay() {
+      const m = String(Math.floor(Math.max(0, restRemainingSec) / 60)).padStart(2, '0');
+      const s = String(Math.max(0, restRemainingSec) % 60).padStart(2, '0');
+      document.getElementById('smart-rest-time').textContent = `${m}:${s}`;
+
+      const circumference = 150.8;
+      const ratio = restTotalSec > 0 ? Math.max(0, restRemainingSec / restTotalSec) : 0;
+      document.getElementById('smart-rest-ring').style.strokeDashoffset = circumference * (1 - ratio);
+    }
+
+    function adjustSmartRest(delta) {
+      restRemainingSec = Math.max(0, restRemainingSec + delta);
+      restTotalSec = Math.max(restTotalSec, restRemainingSec);
+      updateSmartRestDisplay();
+    }
+
+    function togglePauseSmartRest() {
+      restPaused = !restPaused;
+      document.getElementById('rest-pause-btn').textContent = restPaused
+        ? (currentLang === 'sv' ? 'Fortsätt' : 'Resume')
+        : (currentLang === 'sv' ? 'Pausa' : 'Pause');
+    }
+
+    function dismissSmartRestOverlay() {
+      clearInterval(restTimerInterval);
+      document.getElementById('smart-rest-overlay').classList.add('hidden');
+    }
+
+    function triggerManualRest(sec) {
+      startSmartRestCountdown(sec, {
+        label: currentLang === 'sv' ? 'Manuell Vilotimer' : 'Manual Rest Timer',
+        summary: '2:00',
+        rationale: currentLang === 'sv' ? 'Startad manuellt' : 'Triggered manually'
+      });
+    }
+
+    function toggleAutoRest() {
+      restSettings.autoStart = !restSettings.autoStart;
+      saveRestSettings();
+      updateAutoRestUI();
+    }
+
+    function updateAutoRestUI() {
+      const lbl = document.getElementById('auto-rest-label');
+      if (lbl) lbl.textContent = `Auto-Rest: ${restSettings.autoStart ? 'ON' : 'OFF'}`;
+    }
+
+    function toggleRestMute() {
+      restSettings.muted = !restSettings.muted;
+      saveRestSettings();
+      showToast(restSettings.muted ? 'Audio muted' : 'Audio enabled');
+    }
+
+    function playRestCompletionBeep() {
+      if (restSettings.muted) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } catch (_) {}
+    }
+
+    // ==================== HISTORY, SANDBOX TRIALS & CSV IMPORTER ====================
+    function toggleShowTrialWorkouts() {
+      showTrialWorkoutsInHistory = !showTrialWorkoutsInHistory;
+      renderHistoryView();
+    }
+
+    function promoteTrialToReal(id) {
+      const w = state.workouts.find(item => item.id === id);
+      if (!w) return;
+      w.isTrial = false;
+      w.name = w.name.replace(/\s*\((Sandbox|Testpass)\)/gi, '');
+      saveState();
+      renderHistoryView();
+      showToast(currentLang === 'sv' ? 'Testpass omvandlat till riktigt pass!' : 'Promoted trial to Real Workout!');
+    }
+
+    function clearTrialWorkouts() {
+      const count = getTrialWorkouts().length;
+      if (count === 0) return;
+      state.workouts = state.workouts.filter(w => !w.isTrial);
+      saveState();
+      renderHistoryView();
+      showToast(currentLang === 'sv' ? `Rensade ${count} testpass` : `Cleared ${count} trial sessions`);
+    }
+
+    function deleteWorkout(id) {
+      state.workouts = state.workouts.filter(w => w.id !== id);
+      saveState();
+      renderHistoryView();
+    }
+
+    function renderHistoryView() {
+      const container = document.getElementById('history-list');
+      const trialCount = getTrialWorkouts().length;
+      document.getElementById('history-trial-toggle-label').textContent = currentLang === 'sv'
+        ? (showTrialWorkoutsInHistory ? `Dölj testpass (${trialCount})` : `Visa testpass (${trialCount})`)
+        : (showTrialWorkoutsInHistory ? `Hide Trials (${trialCount})` : `Show Trials (${trialCount})`);
+      document.getElementById('clear-trials-btn').classList.toggle('hidden', trialCount === 0);
+
+      const visible = state.workouts.filter(w => showTrialWorkoutsInHistory || !w.isTrial);
+      if (visible.length === 0) {
+        container.innerHTML = `<div class="themed-card border rounded-2xl p-8 text-center text-xs themed-muted">${currentLang === 'sv' ? 'Inga pass lagrade ännu.' : 'No workouts stored yet.'}</div>`;
+        return;
+      }
+
+      const sorted = [...visible].sort((a, b) => new Date(b.date) - new Date(a.date));
+      container.innerHTML = sorted.map(w => {
+        const isTrial = Boolean(w.isTrial);
+        const exHtml = (w.exercises || []).map(ex => {
+          const meta = getExerciseMeta(ex.exerciseId);
+          const chips = (ex.sets || []).map(s => {
+            const pSec = Number(s.pauseSec) || 0;
+            return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded themed-sub border font-mono text-[11px]">
+              ${s.weight}kg&times;${s.reps}${s.type === 'warmup' ? ' (W)' : ''}${pSec > 0 ? `<span class="px-1 rounded bg-violet-500/20 text-violet-300 font-sans font-extrabold text-[9px]">${pSec}s PAUS</span>` : ''}
+            </span>`;
+          }).join(' ');
+          return `
+            <div class="pt-2 border-t border-slate-800/60">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold">${getExerciseDisplayName(meta)}</span>
+                ${getEquipmentBadgeHtml(meta.category)}
+              </div>
+              <div class="flex flex-wrap gap-1.5">${chips}</div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="themed-card border ${isTrial ? 'border-amber-500/50' : ''} rounded-2xl p-4 sm:p-5 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-sm font-extrabold">${w.name}</h3>
+                  ${isTrial ? `<span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400">SANDBOX</span>` : ''}
+                </div>
+                <p class="text-xs themed-muted">${w.date}</p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                ${isTrial ? `<button onclick="promoteTrialToReal('${w.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-[11px] font-extrabold text-emerald-400">${currentLang === 'sv' ? 'Gör till riktigt pass' : 'Promote to Real'}</button>` : ''}
+                <button onclick="deleteWorkout('${w.id}')" class="p-2 rounded-xl themed-sub hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+            <div class="space-y-2">${exHtml}</div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function openCsvModal() {
+      document.getElementById('csv-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeCsvModal() {
+      document.getElementById('csv-modal').classList.add('hidden');
+    }
+
+    function handleCsvFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('csv-raw-textarea').value = ev.target.result;
+        parseCsvInput();
+      };
+      reader.readAsText(file);
+    }
+
+    function mapImportedExerciseName(rawName) {
+      const clean = rawName.trim();
+      const lower = clean.toLowerCase();
+      if (lower.includes('smith')) {
+        if (lower.includes('incline') || lower.includes('sned')) return 'ex_smith_incline_bench';
+        if (lower.includes('bench') || lower.includes('bänk')) return 'ex_smith_bench';
+        if (lower.includes('squat') || lower.includes('knäböj')) return 'ex_smith_squat';
+        if (lower.includes('shoulder') || lower.includes('ohp') || lower.includes('axel')) return 'ex_smith_ohp';
+      }
+      if (['bench press', 'barbell bench press', 'bänkpress', 'skivstångsbänkpress', 'flat bench press'].includes(lower)) return 'ex_bench';
+      if ((lower.includes('paused') || lower.includes('paus')) && (lower.includes('bench') || lower.includes('bänk'))) return 'ex_paused_bench';
+      if (['squat', 'barbell back squat', 'back squat', 'knäböj'].includes(lower)) return 'ex_squat';
+      if (['deadlift', 'conventional deadlift', 'marklyft'].includes(lower)) return 'ex_deadlift';
+      if (['overhead press', 'barbell overhead press', 'ohp', 'militärpress'].includes(lower)) return 'ex_ohp';
+
+      const existing = state.exercises.find(e => e.name.toLowerCase() === lower || (e.nameSv || '').toLowerCase() === lower);
+      if (existing) return existing.id;
+
+      const newId = 'ex_imp_' + lower.replace(/[^a-z0-9]+/g, '_');
+      if (!state.exercises.some(e => e.id === newId)) {
+        state.exercises.push({ id: newId, name: clean, nameSv: clean, muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [8, 10], defaultPauseSec: 0 });
+      }
+      return newId;
+    }
+
+    function parseCsvInput() {
+      const raw = document.getElementById('csv-raw-textarea').value.trim();
+      const previewBox = document.getElementById('csv-preview-box');
+      const confirmBtn = document.getElementById('csv-confirm-btn');
+      if (!raw) {
+        previewBox.classList.add('hidden');
+        confirmBtn.disabled = true;
+        return;
+      }
+
+      const lines = raw.split(/\r?\n/).filter(l => l.trim());
+      const delim = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(delim).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+      const unitMode = document.getElementById('csv-unit-select').value;
+      const isLbs = unitMode === 'lbs' || (unitMode === 'auto' && headers.some(h => h.includes('lbs')));
+
+      const dateIdx = headers.findIndex(h => h.includes('date') || h.includes('datum'));
+      const titleIdx = headers.findIndex(h => h.includes('workout') || h.includes('title') || h.includes('pass'));
+      const exIdx = headers.findIndex(h => h.includes('exercise') || h.includes('övning'));
+      const wtIdx = headers.findIndex(h => h.includes('weight') || h.includes('vikt'));
+      const repIdx = headers.findIndex(h => h.includes('rep'));
+      const rpeIdx = headers.findIndex(h => h.includes('rpe'));
+
+      const grouped = {};
+      let setCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delim).map(c => c.replace(/^"|"$/g, '').trim());
+        const exName = cols[exIdx >= 0 ? exIdx : 2];
+        if (!exName) continue;
+
+        const dateStr = (cols[dateIdx >= 0 ? dateIdx : 0] || new Date().toISOString().slice(0, 10)).slice(0, 10);
+        const title = cols[titleIdx >= 0 ? titleIdx : 1] || 'Imported Workout';
+        let weight = parseFloat((cols[wtIdx >= 0 ? wtIdx : 4] || '0').replace(',', '.')) || 0;
+        if (isLbs) weight = Math.round((weight * 0.453592) * 2) / 2;
+        const reps = parseInt(cols[repIdx >= 0 ? repIdx : 5] || '0', 10) || 0;
+        const rpe = rpeIdx >= 0 ? (parseFloat(cols[rpeIdx]) || 8) : 8;
+        if (reps <= 0) continue;
+
+        const key = `${dateStr}__${title}`;
+        if (!grouped[key]) {
+          grouped[key] = { id: 'wk_imp_' + Date.now() + '_' + Object.keys(grouped).length, date: dateStr, name: title, isTrial: false, exercises: [] };
+        }
+        const exId = mapImportedExerciseName(exName);
+        let exObj = grouped[key].exercises.find(e => e.exerciseId === exId);
+        if (!exObj) {
+          exObj = { exerciseId: exId, sets: [] };
+          grouped[key].exercises.push(exObj);
+        }
+        exObj.sets.push({ weight, reps, pauseSec: 0, rpe, type: 'working', completed: true });
+        setCount++;
+      }
+
+      parsedCsvWorkouts = Object.values(grouped);
+      if (parsedCsvWorkouts.length > 0) {
+        previewBox.classList.remove('hidden');
+        document.getElementById('csv-preview-summary').textContent = `${parsedCsvWorkouts.length} pass (${setCount} set)`;
+        document.getElementById('csv-preview-details').textContent = isLbs ? 'lbs → kg' : 'kg';
+        confirmBtn.disabled = false;
+      } else {
+        previewBox.classList.add('hidden');
+        confirmBtn.disabled = true;
+      }
+    }
+
+    function commitCsvImport() {
+      const mode = document.getElementById('csv-mode-select').value;
+      state.workouts = mode === 'replace' ? [...parsedCsvWorkouts] : [...state.workouts, ...parsedCsvWorkouts];
+      saveState();
+      closeCsvModal();
+      switchTab('dashboard');
+      showToast(`Imported ${parsedCsvWorkouts.length} workouts!`);
+    }
+
+    function exportJsonData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `apexlift-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    }
+
+    function importJsonFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (Array.isArray(parsed.workouts)) {
+            state.workouts = parsed.workouts;
+            if (Array.isArray(parsed.bodyweights)) state.bodyweights = parsed.bodyweights;
+            if (Array.isArray(parsed.customTemplates)) state.customTemplates = parsed.customTemplates;
+            saveState();
+            switchTab('dashboard');
+            showToast('Backup restored');
+          }
+        } catch (_) {
+          showToast('Invalid JSON');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function confirmClearAllData() {
+      state.workouts = [];
+      state.activeSession = null;
+      saveState();
+      renderHistoryView();
+      showToast(currentLang === 'sv' ? 'All träningsdata rensad' : 'All workout data cleared');
+    }
+
+    // ==================== GLOSSARY ====================
+    function renderGlossary() {
+      const cat = document.getElementById('glossary-cat-select').value;
+      const q = (document.getElementById('glossary-search-input').value || '').toLowerCase();
+      const filtered = GLOSSARY_TERMS.filter(item => {
+        const catOk = cat === 'ALL' || item.category === cat;
+        const term = currentLang === 'sv' ? item.termSv : item.termEn;
+        const def = currentLang === 'sv' ? item.defSv : item.defEn;
+        return catOk && (term.toLowerCase().includes(q) || def.toLowerCase().includes(q));
+      });
+
+      document.getElementById('glossary-grid').innerHTML = filtered.map(item => `
+        <div id="glossary-card-${item.id}" class="themed-card border rounded-2xl p-5 space-y-2.5 transition">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-sm font-extrabold">${currentLang === 'sv' ? item.termSv : item.termEn}</h3>
+            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full themed-sub shrink-0">${item.category}</span>
+          </div>
+          <p class="text-xs leading-relaxed">${currentLang === 'sv' ? item.defSv : item.defEn}</p>
+          <div class="p-3 rounded-xl themed-sub border text-[11px] themed-muted">
+            <strong class="themed-accent-text">${currentLang === 'sv' ? 'Så använder ApexLift det:' : 'How ApexLift Uses It:'}</strong>
+            ${currentLang === 'sv' ? item.useSv : item.useEn}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==================== BOOTSTRAP ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAllState();
+      switchTab('dashboard');
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
