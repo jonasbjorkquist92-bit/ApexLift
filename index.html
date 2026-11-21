@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ApexLift — Gym Tracker, Progression &amp; Workout Optimizer</title>
+  <title>ApexLift — Gym Tracker, Progression &amp; Anatomy Optimizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -21,7 +21,7 @@
       --accent: #3b82f6;
       --accent-contrast: #ffffff;
       --chart-line: #3b82f6;
-      --chart-fill: rgba(59, 130, 246, 0.16);
+      --chart-fill: rgba(59, 130, 246, 0.18);
       --chart-grid: rgba(148, 163, 184, 0.12);
     }
 
@@ -130,7 +130,25 @@
       color: var(--accent);
     }
 
-    /* Hide native number spinners for cleaner mobile touch steppers */
+    @keyframes pulseMuscle {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+
+    .muscle-missing-pulse {
+      animation: pulseMuscle 1.5s infinite ease-in-out;
+      cursor: pointer;
+    }
+
+    .muscle-zone-interactive {
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .muscle-zone-interactive:hover {
+      opacity: 0.9;
+    }
+
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
       -webkit-appearance: none;
@@ -180,7 +198,7 @@
         </button>
       </nav>
 
-      <!-- Right Controls: Language Switcher + Theme Switcher + Trial + Log -->
+      <!-- Right Controls: Language + Theme + Trial + Log -->
       <div class="flex items-center gap-1.5 sm:gap-2">
         <!-- Bilingual Language Switcher (SV / EN) -->
         <div class="flex items-center p-0.5 rounded-xl themed-sub border text-[11px] font-extrabold" title="Byt språk / Switch Language">
@@ -188,7 +206,7 @@
           <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="px-2 py-1 rounded-lg transition">EN</button>
         </div>
 
-        <!-- Theme Swatches -->
+        <!-- 5-Theme Swatches -->
         <div class="flex items-center gap-1 px-2 py-1.5 rounded-xl themed-sub border" title="Theme">
           <button type="button" onclick="setTheme('obsidian')" data-theme-btn="obsidian" title="Obsidian Blue" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-blue-500 ring-offset-2 ring-offset-slate-900 transition"></button>
           <button type="button" onclick="setTheme('light')" data-theme-btn="light" title="Arctic Light" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-slate-100 border border-slate-400 ring-offset-2 ring-offset-slate-900 transition"></button>
@@ -210,7 +228,7 @@
     </div>
   </header>
 
-  <!-- MOBILE BOTTOM NAV (Large Touch Targets) -->
+  <!-- MOBILE BOTTOM NAV -->
   <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 themed-card border-t px-1 py-1.5 flex items-center justify-around shadow-2xl">
     <button onclick="switchTab('dashboard')" data-nav="dashboard" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
       <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span data-i18n="navDashboardShort">Stats</span>
@@ -423,6 +441,7 @@
             <option value="Free Weight">Free Weight</option>
             <option value="Smith Machine">Smith Machine</option>
             <option value="Machine / Cable">Machine / Cable</option>
+            <option value="Bodyweight">Bodyweight</option>
           </select>
           <select id="optimizer-goal-select" onchange="renderOptimizer()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
             <option value="auto" data-i18n="goalAuto">Goal: Auto-Match</option>
@@ -472,7 +491,7 @@
             <div class="text-[11px] themed-muted mt-1">Chest, Shoulders &amp; Triceps</div>
           </button>
 
-          <button onclick="startSession('Pull Day', ['ex_deadlift', 'ex_pullup', 'ex_barbell_row', 'ex_face_pull', 'ex_bb_curl'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+          <button onclick="startSession('Pull Day', ['ex_deadlift', 'ex_pullup', 'ex_barbell_row', 'ex_face_pull', 'ex_db_curl'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
             <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
             <div class="text-sm font-bold">Pull Workout</div>
             <div class="text-[11px] themed-muted mt-1">Back, Rear Delts &amp; Biceps</div>
@@ -507,7 +526,7 @@
                 <span data-i18n="trialZeroImpact" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">Excluded from Stats</span>
               </div>
               <p data-i18n="sandboxCardDesc" class="text-xs themed-muted leading-relaxed">
-                Practice logging sets, warm-up ramps, supersets, and test the automatic Smart Rest Timer with zero effect on your real PRs or charts.
+                Practice logging sets, anatomical muscle maps, drag-and-drop ordering, and the Smart Rest Timer with zero effect on your real PRs or charts.
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-2 shrink-0">
@@ -557,7 +576,10 @@
           </div>
         </div>
 
-        <!-- Active Exercise Cards -->
+        <!-- INTERACTIVE ANATOMICAL MUSCLE MAP & SMART COMPLETION PANEL -->
+        <div id="muscle-completion-panel" class="hidden themed-card border border-blue-500/35 rounded-2xl p-4 sm:p-5 space-y-4"></div>
+
+        <!-- Active Exercise Cards (Draggable + Up/Down Reorder) -->
         <div id="active-exercises-container" class="space-y-4"></div>
 
         <!-- Add Exercise Picker -->
@@ -570,12 +592,13 @@
                 <button type="button" onclick="setPickerCategory('Free Weight')" data-pcat="Free Weight" class="pcat-btn px-2.5 py-1 rounded-lg">Free</button>
                 <button type="button" onclick="setPickerCategory('Smith Machine')" data-pcat="Smith Machine" class="pcat-btn px-2.5 py-1 rounded-lg">Smith</button>
                 <button type="button" onclick="setPickerCategory('Machine / Cable')" data-pcat="Machine / Cable" class="pcat-btn px-2.5 py-1 rounded-lg">Machine</button>
+                <button type="button" onclick="setPickerCategory('Bodyweight')" data-pcat="Bodyweight" class="pcat-btn px-2.5 py-1 rounded-lg">BW</button>
               </div>
               <input type="text" id="exercise-search-input" oninput="renderExercisePicker()" placeholder="Search..." class="px-3 py-2 rounded-xl themed-sub border text-xs font-semibold flex-1 sm:w-44" />
             </div>
           </div>
 
-          <div id="exercise-picker-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1"></div>
+          <div id="exercise-picker-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-80 overflow-y-auto pr-1"></div>
         </div>
       </div>
     </section>
@@ -724,9 +747,8 @@
   <div id="toast-box" class="hidden fixed top-20 right-4 z-50 px-4 py-2.5 rounded-xl themed-card border border-emerald-500/50 shadow-xl text-xs font-extrabold"></div>
 
   <script>
-    // ==================== STORAGE KEYS & BILINGUAL DICTIONARY ====================
-    const STORAGE_KEY = 'apexlift_v5_data';
-    const LEGACY_V4_KEY = 'apexlift_v4_data';
+    // ==================== STORAGE KEYS (PRESERVING apexlift_v4_data) ====================
+    const STORAGE_KEY = 'apexlift_v4_data';
     const THEME_KEY = 'apexlift_theme';
     const LANG_KEY = 'apexlift_lang';
     const SMITH_KEY = 'apexlift_smith_cfg';
@@ -795,7 +817,7 @@
         blankSessionTitle: 'Blank Session',
         blankSessionSub: 'Pick exercises manually',
         sandboxCardTitle: 'Trial / Sandbox Workout Mode',
-        sandboxCardDesc: 'Practice logging sets, warm-up ramps, supersets, and test the automatic Smart Rest Timer with zero effect on your real PRs or charts.',
+        sandboxCardDesc: 'Practice logging sets, anatomical muscle maps, drag-and-drop ordering, and the Smart Rest Timer with zero effect on your real PRs or charts.',
         launchSampleTrial: 'Launch Sample Trial Push',
         blankTrialBtn: 'Blank Trial',
         sandboxActiveTitle: 'SANDBOX TRIAL MODE — Zero Impact on PRs & Stats',
@@ -819,7 +841,9 @@
         linkSupersetBtn: 'Link Superset',
         unlinkSupersetBtn: 'Unlink Superset',
         rpeAlertTitle: 'High Fatigue Detected (@RPE ≥ 9.5)',
-        rpeAlertApply: 'Drop -2.5 kg on Remaining Sets'
+        rpeAlertApply: 'Drop -2.5 kg on Remaining Sets',
+        anatomyTitle: 'Anatomical Muscle Map & Smart Completion',
+        anatomySub: 'Highlighted zones show targeted muscle heads. Tap any pulsing unworked zone to add a complementary exercise.'
       },
       sv: {
         brandSub: 'Precisionsstyrka',
@@ -881,7 +905,7 @@
         blankSessionTitle: 'Tomt Pass',
         blankSessionSub: 'Välj övningar manuellt',
         sandboxCardTitle: 'Testpass / Sandlådeläge',
-        sandboxCardDesc: 'Testa setloggning, uppvärmningsgenerator, superset och den smarta vilotimern helt utan att påverka dina riktiga PR eller kurvor.',
+        sandboxCardDesc: 'Testa setloggning, anatomiska muskelkartor, dra-och-släpp och den smarta vilotimern utan att påverka dina riktiga PR.',
         launchSampleTrial: 'Starta Exempel-Push (Test)',
         blankTrialBtn: 'Tomt Testpass',
         sandboxActiveTitle: 'TESTPASS / SANDLÅDA — Påverkar inte PR eller statistik',
@@ -905,7 +929,9 @@
         linkSupersetBtn: 'Länka Superset',
         unlinkSupersetBtn: 'Bryt Superset',
         rpeAlertTitle: 'Hög utmattning (@RPE ≥ 9.5)',
-        rpeAlertApply: 'Sänk -2.5 kg på kvarvarande set'
+        rpeAlertApply: 'Sänk -2.5 kg på kvarvarande set',
+        anatomyTitle: 'Anatomisk Muskelkarta & Smart Komplettering',
+        anatomySub: 'Upplysta zoner visar vilka muskelhuvuden du täckt. Tryck på en pulserande zon för att lägga till kompletterande övning.'
       }
     };
 
@@ -913,42 +939,109 @@
       return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
     }
 
-    // ==================== EXERCISE CATALOG (EN + SV NAMES) ====================
+    // ==================== ANATOMICAL SUB-REGION DEFINITIONS ====================
+    const SUBREGION_LABELS = {
+      chest_mid: { en: 'Mid Chest (Sternal)', sv: 'Mellersta Bröst' },
+      chest_upper: { en: 'Upper Chest (Clavicular)', sv: 'Övre Bröst' },
+      chest_lower: { en: 'Lower Chest / Adduction', sv: 'Nedre Bröst / Adduktion' },
+      biceps_short: { en: 'Biceps Short Head', sv: 'Biceps Korta Huvud' },
+      biceps_long: { en: 'Biceps Long Head (Stretch)', sv: 'Biceps Långa Huvud' },
+      biceps_brachialis: { en: 'Brachialis / Forearm', sv: 'Brachialis / Underarm' },
+      triceps_lateral: { en: 'Triceps Lateral Head', sv: 'Triceps Laterala Huvud' },
+      triceps_long: { en: 'Triceps Long Head (Overhead)', sv: 'Triceps Långa Huvud' },
+      triceps_medial: { en: 'Triceps Medial Head', sv: 'Triceps Mediala Huvud' },
+      shoulders_front: { en: 'Front Delt (Anterior)', sv: 'Främre Axel' },
+      shoulders_side: { en: 'Side Delt (Lateral)', sv: 'Mellersta Axel' },
+      shoulders_rear: { en: 'Rear Delt (Posterior)', sv: 'Bakre Axel' },
+      back_lats: { en: 'Lats (Back Width)', sv: 'Lats (Ryggbredd)' },
+      back_mid: { en: 'Mid-Back / Traps (Thickness)', sv: 'Mellersta Rygg / Traps' },
+      back_erectors: { en: 'Spinal Erectors / Lower Back', sv: 'Ländrygg / Erectors' },
+      legs_quads: { en: 'Quadriceps (Front Thigh)', sv: 'Framsida Lår (Quads)' },
+      legs_hamstrings: { en: 'Hamstrings (Back Thigh)', sv: 'Baksida Lår (Hamstrings)' },
+      legs_glutes: { en: 'Glutes', sv: 'Säte (Glutes)' },
+      legs_calves: { en: 'Calves', sv: 'Vader' },
+      core_abs: { en: 'Rectus Abdominis / Core', sv: 'Mage / Bål' }
+    };
+
+    function getSubRegionLabel(regionKey) {
+      const item = SUBREGION_LABELS[regionKey];
+      if (!item) return regionKey;
+      return currentLang === 'sv' ? item.sv : item.en;
+    }
+
+    // ==================== EXPANDED EXERCISE CATALOG WITH ANATOMICAL TAGS ====================
     const DEFAULT_EXERCISES = [
-      // Free Weight
-      { id: 'ex_bench', name: 'Barbell Bench Press', nameSv: 'Skivstångsbänkpress', muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
-      { id: 'ex_paused_bench', name: 'Paused Barbell Bench Press', nameSv: 'Pausad Bänkpress', muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [4, 8], defaultPauseSec: 2 },
-      { id: 'ex_incline_db', name: 'Incline Dumbbell Press', nameSv: 'Sned Hantelpress', muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
-      { id: 'ex_squat', name: 'Barbell Back Squat', nameSv: 'Knäböj (Skivstång)', muscle: 'Legs', category: 'Free Weight', compound: true, repRange: [5, 8], defaultPauseSec: 0 },
-      { id: 'ex_paused_squat', name: 'Paused Barbell Back Squat', nameSv: 'Pausad Knäböj', muscle: 'Legs', category: 'Free Weight', compound: true, repRange: [4, 6], defaultPauseSec: 2 },
-      { id: 'ex_deadlift', name: 'Conventional Deadlift', nameSv: 'Marklyft', muscle: 'Back', category: 'Free Weight', compound: true, repRange: [3, 6], defaultPauseSec: 0 },
-      { id: 'ex_paused_deadlift', name: 'Paused Conventional Deadlift', nameSv: 'Pausat Marklyft', muscle: 'Back', category: 'Free Weight', compound: true, repRange: [3, 5], defaultPauseSec: 2 },
-      { id: 'ex_rdl', name: 'Romanian Deadlift (RDL)', nameSv: 'Rumänska Marklyft (RDL)', muscle: 'Legs', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
-      { id: 'ex_ohp', name: 'Overhead Barbell Press', nameSv: 'Militärpress (Skivstång)', muscle: 'Shoulders', category: 'Free Weight', compound: true, repRange: [5, 8], defaultPauseSec: 0 },
-      { id: 'ex_paused_ohp', name: 'Paused Overhead Barbell Press', nameSv: 'Pausad Militärpress', muscle: 'Shoulders', category: 'Free Weight', compound: true, repRange: [4, 8], defaultPauseSec: 2 },
-      { id: 'ex_barbell_row', name: 'Bent-Over Barbell Row', nameSv: 'Skivstångsrodd', muscle: 'Back', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
-      { id: 'ex_lat_raise', name: 'Dumbbell Lateral Raise', nameSv: 'Hantellyft åt sidan', muscle: 'Shoulders', category: 'Free Weight', compound: false, repRange: [12, 15], defaultPauseSec: 0 },
-      { id: 'ex_bb_curl', name: 'Barbell / EZ-Bar Curl', nameSv: 'Skivstångscurl / EZ-curl', muscle: 'Arms', category: 'Free Weight', compound: false, repRange: [8, 12], defaultPauseSec: 0 },
+      // CHEST
+      { id: 'ex_bench', name: 'Barbell Bench Press', nameSv: 'Skivstångsbänkpress', muscle: 'Chest', subRegion: 'chest_mid', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_paused_bench', name: 'Paused Barbell Bench Press', nameSv: 'Pausad Bänkpress', muscle: 'Chest', subRegion: 'chest_mid', category: 'Free Weight', compound: true, repRange: [4, 8], defaultPauseSec: 2 },
+      { id: 'ex_db_bench', name: 'Flat Dumbbell Bench Press', nameSv: 'Plan Hantelbänkpress', muscle: 'Chest', subRegion: 'chest_mid', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_incline_db', name: 'Incline Dumbbell Press', nameSv: 'Sned Hantelpress', muscle: 'Chest', subRegion: 'chest_upper', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_incline_bb', name: 'Incline Barbell Bench Press', nameSv: 'Sned Skivstångsbänkpress', muscle: 'Chest', subRegion: 'chest_upper', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_db_fly', name: 'Flat / Incline Dumbbell Flyes', nameSv: 'Hantelflyes', muscle: 'Chest', subRegion: 'chest_lower', category: 'Free Weight', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_smith_bench', name: 'Smith Machine Bench Press', nameSv: 'Bänkpress i Smith-maskin', muscle: 'Chest', subRegion: 'chest_mid', category: 'Smith Machine', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_smith_incline_bench', name: 'Smith Machine Incline Press', nameSv: 'Sned Bänkpress i Smith', muscle: 'Chest', subRegion: 'chest_upper', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_machine_chest', name: 'Seated Machine Chest Press', nameSv: 'Bröstpress i Maskin', muscle: 'Chest', subRegion: 'chest_mid', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_pec_deck', name: 'Pec Deck / Cable Crossover', nameSv: 'Pec Deck / Cable Crossover', muscle: 'Chest', subRegion: 'chest_lower', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_dips', name: 'Parallel Bar Dips', nameSv: 'Dips (+KV)', muscle: 'Chest', subRegion: 'chest_lower', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [6, 12], defaultPauseSec: 0 },
+      { id: 'ex_pushups', name: 'Push-Ups (Weighted / BW)', nameSv: 'Armhävningar (+KV)', muscle: 'Chest', subRegion: 'chest_mid', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [10, 20], defaultPauseSec: 0 },
 
-      // Smith Machine
-      { id: 'ex_smith_bench', name: 'Smith Machine Bench Press', nameSv: 'Bänkpress i Smith-maskin', muscle: 'Chest', category: 'Smith Machine', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
-      { id: 'ex_smith_incline_bench', name: 'Smith Machine Incline Press', nameSv: 'Sned Bänkpress i Smith', muscle: 'Chest', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
-      { id: 'ex_smith_ohp', name: 'Smith Machine Shoulder Press', nameSv: 'Axelpress i Smith-maskin', muscle: 'Shoulders', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
-      { id: 'ex_smith_squat', name: 'Smith Machine Back Squat', nameSv: 'Knäböj i Smith-maskin', muscle: 'Legs', category: 'Smith Machine', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
-      { id: 'ex_smith_rdl', name: 'Smith Machine Romanian Deadlift', nameSv: 'Rumänska Marklyft i Smith', muscle: 'Legs', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      // BICEPS (Arms)
+      { id: 'ex_db_curl', name: 'Standing Dumbbell Curl', nameSv: 'Stående Hantelcurl', muscle: 'Arms', subRegion: 'biceps_short', category: 'Free Weight', compound: false, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_bb_curl', name: 'Barbell / EZ-Bar Curl', nameSv: 'Skivstångscurl / EZ-curl', muscle: 'Arms', subRegion: 'biceps_short', category: 'Free Weight', compound: false, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_incline_curl', name: 'Incline Dumbbell Curl (Long Head)', nameSv: 'Lutande Hantelcurl (Långa huvudet)', muscle: 'Arms', subRegion: 'biceps_long', category: 'Free Weight', compound: false, repRange: [10, 14], defaultPauseSec: 0 },
+      { id: 'ex_hammer_curl', name: 'Dumbbell Hammer Curl', nameSv: 'Hammarcurl (Hantlar)', muscle: 'Arms', subRegion: 'biceps_brachialis', category: 'Free Weight', compound: false, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_conc_curl', name: 'Dumbbell Concentration Curl', nameSv: 'Koncentrationscurl', muscle: 'Arms', subRegion: 'biceps_short', category: 'Free Weight', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_preacher_machine', name: 'Machine / Cable Preacher Curl', nameSv: 'Preacher Curl i Maskin/Kabel', muscle: 'Arms', subRegion: 'biceps_short', category: 'Machine / Cable', compound: false, repRange: [10, 14], defaultPauseSec: 0 },
+      { id: 'ex_cable_bayesian', name: 'Behind-Back Cable Curl', nameSv: 'Kabelcurl bakom kroppen', muscle: 'Arms', subRegion: 'biceps_long', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_rope_hammer', name: 'Cable Rope Hammer Curl', nameSv: 'Repcurl i Kabel (Brachialis)', muscle: 'Arms', subRegion: 'biceps_brachialis', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
 
-      // Machine / Cable
-      { id: 'ex_lat_pulldown', name: 'Lat Pulldown (Cable)', nameSv: 'Latsdrag i kabelmaskin', muscle: 'Back', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
-      { id: 'ex_face_pull', name: 'Cable Face Pull', nameSv: 'Face Pull i kabel', muscle: 'Shoulders', category: 'Machine / Cable', compound: false, repRange: [12, 15], defaultPauseSec: 0 },
-      { id: 'ex_tricep_pushdown', name: 'Cable Triceps Pushdown', nameSv: 'Triceps Pushdown i kabel', muscle: 'Arms', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
-      { id: 'ex_leg_press', name: '45-Degree Leg Press', nameSv: 'Benpress 45°', muscle: 'Legs', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
-      { id: 'ex_leg_curl', name: 'Seated / Lying Leg Curl', nameSv: 'Lårcurl (Sittande / Liggande)', muscle: 'Legs', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
-      { id: 'ex_calf_raise', name: 'Standing Calf Raise', nameSv: 'Stående Vadpress', muscle: 'Legs', category: 'Machine / Cable', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
-      { id: 'ex_cable_crunch', name: 'Weighted Cable Crunch', nameSv: 'Kabelcrunch', muscle: 'Core', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      // TRICEPS (Arms)
+      { id: 'ex_tricep_pushdown', name: 'Cable Triceps Pushdown', nameSv: 'Triceps Pushdown i kabel', muscle: 'Arms', subRegion: 'triceps_lateral', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_skullcrusher', name: 'Lying EZ-Bar Skullcrusher', nameSv: 'Liggande Tricepsextension (Skullcrusher)', muscle: 'Arms', subRegion: 'triceps_long', category: 'Free Weight', compound: false, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_oh_tricep_db', name: 'Overhead Dumbbell Triceps Extension', nameSv: 'Hantelextension över huvudet', muscle: 'Arms', subRegion: 'triceps_long', category: 'Free Weight', compound: false, repRange: [10, 14], defaultPauseSec: 0 },
+      { id: 'ex_close_grip_bench', name: 'Close-Grip Barbell Bench Press', nameSv: 'Smal Bänkpress', muscle: 'Arms', subRegion: 'triceps_medial', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_bench_dips', name: 'Bench Dips / Machine Dip', nameSv: 'Bänkdips / Tricepspress i Maskin', muscle: 'Arms', subRegion: 'triceps_medial', category: 'Bodyweight', usesUserBw: true, compound: false, repRange: [10, 16], defaultPauseSec: 0 },
 
-      // Bodyweight (usesUserBw: true)
-      { id: 'ex_pullup', name: 'Pull-Ups / Chins', nameSv: 'Chins / Pull-ups (+KV)', muscle: 'Back', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [6, 12], defaultPauseSec: 0 },
-      { id: 'ex_dips', name: 'Parallel Bar Dips', nameSv: 'Dips (+KV)', muscle: 'Chest', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [6, 12], defaultPauseSec: 0 }
+      // SHOULDERS
+      { id: 'ex_ohp', name: 'Overhead Barbell Press', nameSv: 'Militärpress (Skivstång)', muscle: 'Shoulders', subRegion: 'shoulders_front', category: 'Free Weight', compound: true, repRange: [5, 8], defaultPauseSec: 0 },
+      { id: 'ex_paused_ohp', name: 'Paused Overhead Barbell Press', nameSv: 'Pausad Militärpress', muscle: 'Shoulders', subRegion: 'shoulders_front', category: 'Free Weight', compound: true, repRange: [4, 8], defaultPauseSec: 2 },
+      { id: 'ex_db_shoulder_press', name: 'Seated Dumbbell / Arnold Press', nameSv: 'Sittande Hantelpress / Arnold Press', muscle: 'Shoulders', subRegion: 'shoulders_front', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_smith_ohp', name: 'Smith Machine Shoulder Press', nameSv: 'Axelpress i Smith-maskin', muscle: 'Shoulders', subRegion: 'shoulders_front', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_machine_ohp', name: 'Machine Shoulder Press', nameSv: 'Axelpress i Maskin', muscle: 'Shoulders', subRegion: 'shoulders_front', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_lat_raise', name: 'Dumbbell Lateral Raise', nameSv: 'Hantellyft åt sidan', muscle: 'Shoulders', subRegion: 'shoulders_side', category: 'Free Weight', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
+      { id: 'ex_machine_lat_raise', name: 'Machine / Cable Lateral Raise', nameSv: 'Sidolyft i Maskin / Kabel', muscle: 'Shoulders', subRegion: 'shoulders_side', category: 'Machine / Cable', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
+      { id: 'ex_face_pull', name: 'Cable Face Pull', nameSv: 'Face Pull i kabel', muscle: 'Shoulders', subRegion: 'shoulders_rear', category: 'Machine / Cable', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
+      { id: 'ex_rev_pec_deck', name: 'Reverse Pec Deck (Rear Delt)', nameSv: 'Omvänd Pec Deck (Bakre Axel)', muscle: 'Shoulders', subRegion: 'shoulders_rear', category: 'Machine / Cable', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
+
+      // BACK
+      { id: 'ex_deadlift', name: 'Conventional Deadlift', nameSv: 'Marklyft', muscle: 'Back', subRegion: 'back_erectors', category: 'Free Weight', compound: true, repRange: [3, 6], defaultPauseSec: 0 },
+      { id: 'ex_paused_deadlift', name: 'Paused Conventional Deadlift', nameSv: 'Pausat Marklyft', muscle: 'Back', subRegion: 'back_erectors', category: 'Free Weight', compound: true, repRange: [3, 5], defaultPauseSec: 2 },
+      { id: 'ex_pullup', name: 'Pull-Ups / Chins', nameSv: 'Chins / Pull-ups (+KV)', muscle: 'Back', subRegion: 'back_lats', category: 'Bodyweight', usesUserBw: true, compound: true, repRange: [6, 12], defaultPauseSec: 0 },
+      { id: 'ex_lat_pulldown', name: 'Lat Pulldown (Cable)', nameSv: 'Latsdrag i kabelmaskin', muscle: 'Back', subRegion: 'back_lats', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_machine_pullover', name: 'Machine / Cable Straight-Arm Pullover', nameSv: 'Pullover i Maskin / Kabel', muscle: 'Back', subRegion: 'back_lats', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_barbell_row', name: 'Bent-Over Barbell Row', nameSv: 'Skivstångsrodd', muscle: 'Back', subRegion: 'back_mid', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_db_row', name: 'Single-Arm Dumbbell Row', nameSv: 'Enarms Hantelrodd', muscle: 'Back', subRegion: 'back_mid', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_machine_row', name: 'Seated Machine / Cable Row', nameSv: 'Sittande Rodd i Maskin / Kabel', muscle: 'Back', subRegion: 'back_mid', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_shrugs', name: 'Barbell / Dumbbell Shrugs', nameSv: 'Shrugs (Skivstång / Hantlar)', muscle: 'Back', subRegion: 'back_mid', category: 'Free Weight', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_hyperext', name: 'Back Extensions (Hyperextensions)', nameSv: 'Ryggresningar', muscle: 'Back', subRegion: 'back_erectors', category: 'Bodyweight', usesUserBw: false, compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+
+      // LEGS
+      { id: 'ex_squat', name: 'Barbell Back Squat', nameSv: 'Knäböj (Skivstång)', muscle: 'Legs', subRegion: 'legs_quads', category: 'Free Weight', compound: true, repRange: [5, 8], defaultPauseSec: 0 },
+      { id: 'ex_paused_squat', name: 'Paused Barbell Back Squat', nameSv: 'Pausad Knäböj', muscle: 'Legs', subRegion: 'legs_quads', category: 'Free Weight', compound: true, repRange: [4, 6], defaultPauseSec: 2 },
+      { id: 'ex_smith_squat', name: 'Smith Machine Back Squat', nameSv: 'Knäböj i Smith-maskin', muscle: 'Legs', subRegion: 'legs_quads', category: 'Smith Machine', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_leg_press', name: '45-Degree Leg Press', nameSv: 'Benpress 45°', muscle: 'Legs', subRegion: 'legs_quads', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_hack_squat', name: 'Machine Hack Squat', nameSv: 'Hack Squat i Maskin', muscle: 'Legs', subRegion: 'legs_quads', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_leg_ext', name: 'Seated Leg Extension', nameSv: 'Benspark (Leg Extension)', muscle: 'Legs', subRegion: 'legs_quads', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_rdl', name: 'Romanian Deadlift (RDL)', nameSv: 'Rumänska Marklyft (RDL)', muscle: 'Legs', subRegion: 'legs_hamstrings', category: 'Free Weight', compound: true, repRange: [6, 10], defaultPauseSec: 0 },
+      { id: 'ex_smith_rdl', name: 'Smith Machine Romanian Deadlift', nameSv: 'Rumänska Marklyft i Smith', muscle: 'Legs', subRegion: 'legs_hamstrings', category: 'Smith Machine', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_leg_curl', name: 'Seated / Lying Leg Curl', nameSv: 'Lårcurl (Sittande / Liggande)', muscle: 'Legs', subRegion: 'legs_hamstrings', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_bulgarian', name: 'Bulgarian Split Squat', nameSv: 'Bulgariska Utfallssteg', muscle: 'Legs', subRegion: 'legs_glutes', category: 'Free Weight', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_hip_thrust', name: 'Machine / Barbell Hip Thrust', nameSv: 'Höftlyft (Hip Thrust)', muscle: 'Legs', subRegion: 'legs_glutes', category: 'Machine / Cable', compound: true, repRange: [8, 12], defaultPauseSec: 0 },
+      { id: 'ex_calf_raise', name: 'Standing / Seated Calf Raise', nameSv: 'Vadpress (Stående / Sittande)', muscle: 'Legs', subRegion: 'legs_calves', category: 'Machine / Cable', compound: false, repRange: [12, 16], defaultPauseSec: 0 },
+
+      // CORE
+      { id: 'ex_cable_crunch', name: 'Weighted Cable Crunch', nameSv: 'Kabelcrunch', muscle: 'Core', subRegion: 'core_abs', category: 'Machine / Cable', compound: false, repRange: [10, 15], defaultPauseSec: 0 },
+      { id: 'ex_hanging_leg_raise', name: 'Hanging Leg / Knee Raise', nameSv: 'Hängande Benlyft', muscle: 'Core', subRegion: 'core_abs', category: 'Bodyweight', usesUserBw: false, compound: false, repRange: [10, 15], defaultPauseSec: 0 }
     ];
 
     const SMITH_PRESETS = [
@@ -1047,6 +1140,7 @@
     let pickerCategoryFilter = 'ALL';
     let showTrialWorkoutsInHistory = true;
     let parsedCsvWorkouts = [];
+    let draggedExIndex = null;
 
     // Smart Rest Timer Runtime
     let restTimerInterval = null;
@@ -1054,7 +1148,7 @@
     let restTotalSec = 120;
     let restPaused = false;
 
-    // ==================== PERSISTENCE & MIGRATION ====================
+    // ==================== PERSISTENCE (PRESERVING apexlift_v4_data) ====================
     function loadAllState() {
       const savedTheme = localStorage.getItem(THEME_KEY) || 'obsidian';
       setTheme(savedTheme, false);
@@ -1069,31 +1163,24 @@
         if (rc) restSettings = { ...restSettings, ...rc };
       } catch (_) {}
 
-      // Load v5 or migrate seamlessly from v4
-      let raw = null;
       try {
-        raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (!raw) {
-          const v4 = JSON.parse(localStorage.getItem(LEGACY_V4_KEY));
-          if (v4 && Array.isArray(v4.workouts)) raw = v4;
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (raw && Array.isArray(raw.workouts)) {
+          const cleanWorkouts = raw.workouts.filter(w => !String(w.id || '').startsWith('sample_'));
+          const mergedExercises = [...DEFAULT_EXERCISES];
+          (raw.exercises || []).forEach(ex => {
+            if (!mergedExercises.some(d => d.id === ex.id)) mergedExercises.push(ex);
+          });
+          state = {
+            exercises: mergedExercises,
+            workouts: cleanWorkouts,
+            bodyweights: Array.isArray(raw.bodyweights) ? raw.bodyweights : [],
+            customTemplates: Array.isArray(raw.customTemplates) ? raw.customTemplates : [],
+            activeSession: raw.activeSession || null
+          };
+          saveState();
         }
       } catch (_) {}
-
-      if (raw && Array.isArray(raw.workouts)) {
-        const cleanWorkouts = raw.workouts.filter(w => !String(w.id || '').startsWith('sample_'));
-        const mergedExercises = [...DEFAULT_EXERCISES];
-        (raw.exercises || []).forEach(ex => {
-          if (!mergedExercises.some(d => d.id === ex.id)) mergedExercises.push(ex);
-        });
-        state = {
-          exercises: mergedExercises,
-          workouts: cleanWorkouts,
-          bodyweights: Array.isArray(raw.bodyweights) ? raw.bodyweights : [],
-          customTemplates: Array.isArray(raw.customTemplates) ? raw.customTemplates : [],
-          activeSession: raw.activeSession || null
-        };
-        saveState();
-      }
 
       updateAutoRestUI();
       applyLanguageUI();
@@ -1118,7 +1205,6 @@
       document.documentElement.lang = currentLang;
       applyLanguageUI();
 
-      // Re-render visible tab
       const activeTab = document.querySelector('.tab-view:not(.hidden)')?.id?.replace('tab-', '') || 'dashboard';
       if (activeTab === 'dashboard') renderDashboard();
       if (activeTab === 'optimizer') renderOptimizer();
@@ -1203,6 +1289,388 @@
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         card.classList.add('ring-2', 'ring-emerald-400');
         setTimeout(() => card.classList.remove('ring-2', 'ring-emerald-400'), 2200);
+      }
+    }
+
+    // ==================== INTERACTIVE ANATOMICAL SVG ENGINE ====================
+    // 1) Close-up detailed SVG icon showing exact muscle head/region targeted
+    function getCloseUpMuscleSvg(subRegion) {
+      const baseFill = 'rgba(148, 163, 184, 0.22)';
+      const activeFill = 'var(--accent)';
+      const r = subRegion || 'chest_mid';
+
+      // Biceps & Brachialis close-up arm diagram
+      if (r.startsWith('biceps_')) {
+        const isLong = r === 'biceps_long';
+        const isShort = r === 'biceps_short';
+        const isBrach = r === 'biceps_brachialis';
+        return `
+          <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Shoulder & Arm Outline -->
+            <path d="M16 14 C24 10, 36 12, 42 22 L52 44 C54 48, 49 52, 45 49 L35 34 L20 42 C14 44, 10 38, 12 30 Z" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="2"/>
+            <!-- Biceps Long Head (Outer peak) -->
+            <path d="M18 19 C25 14, 34 18, 36 27 C31 25, 23 24, 18 26 Z" fill="${isLong ? activeFill : baseFill}"/>
+            <!-- Biceps Short Head (Inner belly) -->
+            <path d="M18 26 C24 24, 32 25, 36 28 C34 34, 25 36, 18 32 Z" fill="${isShort ? activeFill : baseFill}"/>
+            <!-- Brachialis (Deep/Lower lateral elbow) -->
+            <path d="M22 33 C28 34, 35 32, 39 36 C37 40, 29 41, 23 38 Z" fill="${isBrach ? activeFill : baseFill}"/>
+          </svg>
+        `;
+      }
+
+      // Triceps 3-head close-up diagram
+      if (r.startsWith('triceps_')) {
+        const isLong = r === 'triceps_long';
+        const isLat = r === 'triceps_lateral';
+        const isMed = r === 'triceps_medial';
+        return `
+          <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <path d="M20 12 L40 12 L44 48 L22 48 Z" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="2" rx="8"/>
+            <!-- Long Head (Inner posterior) -->
+            <path d="M22 15 C26 15, 29 22, 29 36 L22 36 Z" fill="${isLong ? activeFill : baseFill}"/>
+            <!-- Lateral Head (Outer horseshoe) -->
+            <path d="M31 15 C37 16, 41 24, 39 36 L31 36 Z" fill="${isLat ? activeFill : baseFill}"/>
+            <!-- Medial Head (Lower near elbow) -->
+            <path d="M23 37 L38 37 L36 46 L25 46 Z" fill="${isMed ? activeFill : baseFill}"/>
+          </svg>
+        `;
+      }
+
+      // Chest 3-zone close-up diagram
+      if (r.startsWith('chest_')) {
+        const isUpper = r === 'chest_upper';
+        const isMid = r === 'chest_mid';
+        const isLower = r === 'chest_lower';
+        return `
+          <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Upper Clavicular Fibers -->
+            <path d="M10 18 L30 22 L30 28 L12 25 Z M54 18 L34 22 L34 28 L52 25 Z" fill="${isUpper ? activeFill : baseFill}"/>
+            <!-- Mid Sternal Fibers -->
+            <path d="M12 26 L30 29 L30 37 L13 35 Z M52 26 L34 29 L34 37 L51 35 Z" fill="${isMid ? activeFill : baseFill}"/>
+            <!-- Lower Costal Fibers -->
+            <path d="M14 36 L30 38 L28 45 L16 42 Z M50 36 L34 38 L36 45 L48 42 Z" fill="${isLower ? activeFill : baseFill}"/>
+          </svg>
+        `;
+      }
+
+      // Shoulders 3-head deltoid close-up
+      if (r.startsWith('shoulders_')) {
+        const isFront = r === 'shoulders_front';
+        const isSide = r === 'shoulders_side';
+        const isRear = r === 'shoulders_rear';
+        return `
+          <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Front Delt -->
+            <path d="M14 22 C18 16, 25 16, 26 24 L24 42 C18 40, 14 32, 14 22 Z" fill="${isFront ? activeFill : baseFill}"/>
+            <!-- Lateral / Side Delt -->
+            <path d="M27 16 C32 14, 37 16, 38 24 L36 44 L26 44 Z" fill="${isSide ? activeFill : baseFill}"/>
+            <!-- Rear Delt -->
+            <path d="M39 20 C45 18, 50 24, 49 34 L38 42 Z" fill="${isRear ? activeFill : baseFill}"/>
+          </svg>
+        `;
+      }
+
+      // Back Lats vs Mid-Back vs Erectors
+      if (r.startsWith('back_')) {
+        const isLats = r === 'back_lats';
+        const isMid = r === 'back_mid';
+        const isErect = r === 'back_erectors';
+        return `
+          <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Traps / Mid-Back -->
+            <path d="M22 14 L32 10 L42 14 L38 32 L26 32 Z" fill="${isMid ? activeFill : baseFill}"/>
+            <!-- Lats V-Taper -->
+            <path d="M14 22 L25 24 L25 44 L18 38 Z M50 22 L39 24 L39 44 L46 38 Z" fill="${isLats ? activeFill : baseFill}"/>
+            <!-- Spinal Erectors -->
+            <path d="M26 34 L38 34 L36 52 L28 52 Z" fill="${isErect ? activeFill : baseFill}"/>
+          </svg>
+        `;
+      }
+
+      // Legs Quads vs Hamstrings vs Glutes vs Calves
+      if (r.startsWith('legs_')) {
+        const isQuads = r === 'legs_quads';
+        const isHams = r === 'legs_hamstrings';
+        const isGlutes = r === 'legs_glutes';
+        const isCalves = r === 'legs_calves';
+        return `
+          <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Glutes -->
+            <path d="M20 10 L44 10 L46 22 L18 22 Z" fill="${isGlutes ? activeFill : baseFill}"/>
+            <!-- Quads (Left leg) -->
+            <path d="M18 24 L30 24 L28 40 L20 40 Z" fill="${isQuads ? activeFill : baseFill}"/>
+            <!-- Hamstrings (Right leg) -->
+            <path d="M34 24 L46 24 L44 40 L36 40 Z" fill="${isHams ? activeFill : baseFill}"/>
+            <!-- Calves -->
+            <path d="M21 42 L28 42 L27 55 L22 55 Z M36 42 L43 42 L42 55 L37 55 Z" fill="${isCalves ? activeFill : baseFill}"/>
+          </svg>
+        `;
+      }
+
+      // Core / Abs
+      return `
+        <svg viewBox="0 0 64 64" class="w-12 h-12 rounded-xl themed-sub border p-1 shrink-0" aria-label="${getSubRegionLabel(r)}">
+          <rect x="22" y="14" width="8" height="9" rx="2" fill="${activeFill}"/>
+          <rect x="34" y="14" width="8" height="9" rx="2" fill="${activeFill}"/>
+          <rect x="22" y="26" width="8" height="9" rx="2" fill="${activeFill}"/>
+          <rect x="34" y="26" width="8" height="9" rx="2" fill="${activeFill}"/>
+          <rect x="22" y="38" width="8" height="11" rx="2" fill="${activeFill}"/>
+          <rect x="34" y="38" width="8" height="11" rx="2" fill="${activeFill}"/>
+        </svg>
+      `;
+    }
+
+    // 2) Combined Front & Back Interactive Full-Body SVG Map + Smart Muscle Completion Engine
+    const MUSCLE_COMPLETION_GROUPS = [
+      {
+        groupKey: 'Biceps',
+        labelEn: 'Biceps (3 Heads)',
+        labelSv: 'Biceps (3 delar)',
+        triggerSubRegions: ['biceps_short', 'biceps_long', 'biceps_brachialis'],
+        subRegions: [
+          { region: 'biceps_short', exId: 'ex_preacher_machine' },
+          { region: 'biceps_long', exId: 'ex_incline_curl' },
+          { region: 'biceps_brachialis', exId: 'ex_hammer_curl' }
+        ]
+      },
+      {
+        groupKey: 'Chest',
+        labelEn: 'Chest (3 Zones)',
+        labelSv: 'Bröst (3 zoner)',
+        triggerSubRegions: ['chest_mid', 'chest_upper', 'chest_lower'],
+        subRegions: [
+          { region: 'chest_mid', exId: 'ex_bench' },
+          { region: 'chest_upper', exId: 'ex_incline_db' },
+          { region: 'chest_lower', exId: 'ex_pec_deck' }
+        ]
+      },
+      {
+        groupKey: 'Shoulders',
+        labelEn: 'Shoulders (3 Heads)',
+        labelSv: 'Axlar (3 huvuden)',
+        triggerSubRegions: ['shoulders_front', 'shoulders_side', 'shoulders_rear'],
+        subRegions: [
+          { region: 'shoulders_front', exId: 'ex_ohp' },
+          { region: 'shoulders_side', exId: 'ex_lat_raise' },
+          { region: 'shoulders_rear', exId: 'ex_rev_pec_deck' }
+        ]
+      },
+      {
+        groupKey: 'Triceps',
+        labelEn: 'Triceps (3 Heads)',
+        labelSv: 'Triceps (3 huvuden)',
+        triggerSubRegions: ['triceps_lateral', 'triceps_long', 'triceps_medial'],
+        subRegions: [
+          { region: 'triceps_lateral', exId: 'ex_tricep_pushdown' },
+          { region: 'triceps_long', exId: 'ex_oh_tricep_db' },
+          { region: 'triceps_medial', exId: 'ex_close_grip_bench' }
+        ]
+      },
+      {
+        groupKey: 'Back',
+        labelEn: 'Back (Width, Thickness & Lower)',
+        labelSv: 'Rygg (Bredd, Tjocklek & Ländrygg)',
+        triggerSubRegions: ['back_lats', 'back_mid', 'back_erectors'],
+        subRegions: [
+          { region: 'back_lats', exId: 'ex_lat_pulldown' },
+          { region: 'back_mid', exId: 'ex_machine_row' },
+          { region: 'back_erectors', exId: 'ex_hyperext' }
+        ]
+      },
+      {
+        groupKey: 'Legs',
+        labelEn: 'Legs (Quads, Hams, Glutes & Calves)',
+        labelSv: 'Ben (Quads, Baksida, Säte & Vader)',
+        triggerSubRegions: ['legs_quads', 'legs_hamstrings', 'legs_glutes', 'legs_calves'],
+        subRegions: [
+          { region: 'legs_quads', exId: 'ex_leg_ext' },
+          { region: 'legs_hamstrings', exId: 'ex_leg_curl' },
+          { region: 'legs_glutes', exId: 'ex_hip_thrust' },
+          { region: 'legs_calves', exId: 'ex_calf_raise' }
+        ]
+      }
+    ];
+
+    function getRegionFill(regionKey, coveredSet, missingSet) {
+      if (coveredSet.has(regionKey)) return 'var(--accent)';
+      if (missingSet.has(regionKey)) return '#f59e0b';
+      return 'rgba(148, 163, 184, 0.24)';
+    }
+
+    function getRegionClass(regionKey, missingSet) {
+      return missingSet.has(regionKey) ? 'muscle-zone-interactive muscle-missing-pulse' : 'muscle-zone-interactive';
+    }
+
+    function renderAnatomyAndCompletionPanel() {
+      const panel = document.getElementById('muscle-completion-panel');
+      if (!state.activeSession || state.activeSession.exercises.length === 0) {
+        panel.classList.add('hidden');
+        return;
+      }
+      panel.classList.remove('hidden');
+
+      const coveredSubRegions = new Set();
+      state.activeSession.exercises.forEach(e => {
+        const meta = getExerciseMeta(e.exerciseId);
+        if (meta.subRegion) coveredSubRegions.add(meta.subRegion);
+      });
+
+      const missingSubRegions = new Set();
+      const missingCards = [];
+
+      MUSCLE_COMPLETION_GROUPS.forEach(grp => {
+        const isGroupActive = grp.triggerSubRegions.some(sr => coveredSubRegions.has(sr));
+        if (!isGroupActive) return;
+
+        grp.subRegions.forEach(srObj => {
+          if (!coveredSubRegions.has(srObj.region)) {
+            missingSubRegions.add(srObj.region);
+            if (!missingCards.some(c => c.exId === srObj.exId)) {
+              missingCards.push({
+                groupLabel: currentLang === 'sv' ? grp.labelSv : grp.labelEn,
+                region: srObj.region,
+                exId: srObj.exId
+              });
+            }
+          }
+        });
+      });
+
+      const frontSvg = `
+        <svg viewBox="0 0 140 250" class="w-32 sm:w-36 h-auto shrink-0 select-none">
+          <text x="70" y="13" text-anchor="middle" fill="currentColor" opacity="0.55" font-size="9" font-weight="800">${currentLang === 'sv' ? 'FRAMSIDA' : 'FRONT'}</text>
+          <!-- Silhouette -->
+          <circle cx="70" cy="28" r="10" fill="rgba(148,163,184,0.2)"/>
+          <path d="M52 42 L88 42 L94 115 L46 115 Z" fill="rgba(148,163,184,0.1)"/>
+          <!-- Shoulders Front -->
+          <ellipse onclick="handleBodyZoneTap('shoulders_front')" cx="43" cy="48" rx="7" ry="9" fill="${getRegionFill('shoulders_front', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_front', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_front')}</title></ellipse>
+          <ellipse onclick="handleBodyZoneTap('shoulders_front')" cx="97" cy="48" rx="7" ry="9" fill="${getRegionFill('shoulders_front', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_front', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_front')}</title></ellipse>
+          <!-- Shoulders Side -->
+          <ellipse onclick="handleBodyZoneTap('shoulders_side')" cx="36" cy="52" rx="4" ry="8" fill="${getRegionFill('shoulders_side', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_side', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_side')}</title></ellipse>
+          <ellipse onclick="handleBodyZoneTap('shoulders_side')" cx="104" cy="52" rx="4" ry="8" fill="${getRegionFill('shoulders_side', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_side', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_side')}</title></ellipse>
+          <!-- Chest Upper -->
+          <path onclick="handleBodyZoneTap('chest_upper')" d="M51 44 L69 47 L69 53 L50 51 Z M89 44 L71 47 L71 53 L90 51 Z" fill="${getRegionFill('chest_upper', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('chest_upper', missingSubRegions)}"><title>${getSubRegionLabel('chest_upper')}</title></path>
+          <!-- Chest Mid -->
+          <path onclick="handleBodyZoneTap('chest_mid')" d="M50 52 L69 54 L69 62 L51 60 Z M90 52 L71 54 L71 62 L89 60 Z" fill="${getRegionFill('chest_mid', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('chest_mid', missingSubRegions)}"><title>${getSubRegionLabel('chest_mid')}</title></path>
+          <!-- Chest Lower -->
+          <path onclick="handleBodyZoneTap('chest_lower')" d="M52 61 L69 63 L68 69 L54 66 Z M88 61 L71 63 L72 69 L86 66 Z" fill="${getRegionFill('chest_lower', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('chest_lower', missingSubRegions)}"><title>${getSubRegionLabel('chest_lower')}</title></path>
+          <!-- Biceps Long Head (Outer) -->
+          <rect onclick="handleBodyZoneTap('biceps_long')" x="32" y="61" width="5" height="22" rx="2.5" fill="${getRegionFill('biceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_long', missingSubRegions)}"><title>${getSubRegionLabel('biceps_long')}</title></rect>
+          <rect onclick="handleBodyZoneTap('biceps_long')" x="103" y="61" width="5" height="22" rx="2.5" fill="${getRegionFill('biceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_long', missingSubRegions)}"><title>${getSubRegionLabel('biceps_long')}</title></rect>
+          <!-- Biceps Short Head (Inner) -->
+          <rect onclick="handleBodyZoneTap('biceps_short')" x="38" y="61" width="5" height="22" rx="2.5" fill="${getRegionFill('biceps_short', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_short', missingSubRegions)}"><title>${getSubRegionLabel('biceps_short')}</title></rect>
+          <rect onclick="handleBodyZoneTap('biceps_short')" x="97" y="61" width="5" height="22" rx="2.5" fill="${getRegionFill('biceps_short', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_short', missingSubRegions)}"><title>${getSubRegionLabel('biceps_short')}</title></rect>
+          <!-- Brachialis (Lower outer arm / forearm) -->
+          <rect onclick="handleBodyZoneTap('biceps_brachialis')" x="33" y="84" width="8" height="20" rx="3" fill="${getRegionFill('biceps_brachialis', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_brachialis', missingSubRegions)}"><title>${getSubRegionLabel('biceps_brachialis')}</title></rect>
+          <rect onclick="handleBodyZoneTap('biceps_brachialis')" x="99" y="84" width="8" height="20" rx="3" fill="${getRegionFill('biceps_brachialis', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_brachialis', missingSubRegions)}"><title>${getSubRegionLabel('biceps_brachialis')}</title></rect>
+          <!-- Core / Abs -->
+          <rect onclick="handleBodyZoneTap('core_abs')" x="58" y="72" width="24" height="38" rx="4" fill="${getRegionFill('core_abs', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('core_abs', missingSubRegions)}"><title>${getSubRegionLabel('core_abs')}</title></rect>
+          <!-- Quads -->
+          <path onclick="handleBodyZoneTap('legs_quads')" d="M50 118 L67 118 L65 172 L52 172 Z M73 118 L90 118 L88 172 L75 172 Z" fill="${getRegionFill('legs_quads', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_quads', missingSubRegions)}"><title>${getSubRegionLabel('legs_quads')}</title></path>
+          <!-- Calves Front -->
+          <path onclick="handleBodyZoneTap('legs_calves')" d="M53 178 L64 178 L62 226 L55 226 Z M76 178 L87 178 L85 226 L78 226 Z" fill="${getRegionFill('legs_calves', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_calves', missingSubRegions)}"><title>${getSubRegionLabel('legs_calves')}</title></path>
+        </svg>
+      `;
+
+      const backSvg = `
+        <svg viewBox="0 0 140 250" class="w-32 sm:w-36 h-auto shrink-0 select-none">
+          <text x="70" y="13" text-anchor="middle" fill="currentColor" opacity="0.55" font-size="9" font-weight="800">${currentLang === 'sv' ? 'BAKSIDA' : 'BACK'}</text>
+          <circle cx="70" cy="28" r="10" fill="rgba(148,163,184,0.2)"/>
+          <!-- Rear Delts -->
+          <ellipse onclick="handleBodyZoneTap('shoulders_rear')" cx="41" cy="48" rx="7" ry="8" fill="${getRegionFill('shoulders_rear', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_rear', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_rear')}</title></ellipse>
+          <ellipse onclick="handleBodyZoneTap('shoulders_rear')" cx="99" cy="48" rx="7" ry="8" fill="${getRegionFill('shoulders_rear', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_rear', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_rear')}</title></ellipse>
+          <!-- Mid-Back / Traps -->
+          <path onclick="handleBodyZoneTap('back_mid')" d="M54 40 L70 35 L86 40 L81 74 L59 74 Z" fill="${getRegionFill('back_mid', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('back_mid', missingSubRegions)}"><title>${getSubRegionLabel('back_mid')}</title></path>
+          <!-- Lats -->
+          <path onclick="handleBodyZoneTap('back_lats')" d="M47 54 L58 58 L58 92 L50 82 Z M93 54 L82 58 L82 92 L90 82 Z" fill="${getRegionFill('back_lats', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('back_lats', missingSubRegions)}"><title>${getSubRegionLabel('back_lats')}</title></path>
+          <!-- Lower Back / Erectors -->
+          <rect onclick="handleBodyZoneTap('back_erectors')" x="60" y="76" width="20" height="26" rx="3" fill="${getRegionFill('back_erectors', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('back_erectors', missingSubRegions)}"><title>${getSubRegionLabel('back_erectors')}</title></rect>
+          <!-- Triceps Long Head (Inner) -->
+          <rect onclick="handleBodyZoneTap('triceps_long')" x="37" y="58" width="4.5" height="20" rx="2" fill="${getRegionFill('triceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_long', missingSubRegions)}"><title>${getSubRegionLabel('triceps_long')}</title></rect>
+          <rect onclick="handleBodyZoneTap('triceps_long')" x="98.5" y="58" width="4.5" height="20" rx="2" fill="${getRegionFill('triceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_long', missingSubRegions)}"><title>${getSubRegionLabel('triceps_long')}</title></rect>
+          <!-- Triceps Lateral Head (Outer) -->
+          <rect onclick="handleBodyZoneTap('triceps_lateral')" x="32" y="58" width="4.5" height="20" rx="2" fill="${getRegionFill('triceps_lateral', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_lateral', missingSubRegions)}"><title>${getSubRegionLabel('triceps_lateral')}</title></rect>
+          <rect onclick="handleBodyZoneTap('triceps_lateral')" x="103.5" y="58" width="4.5" height="20" rx="2" fill="${getRegionFill('triceps_lateral', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_lateral', missingSubRegions)}"><title>${getSubRegionLabel('triceps_lateral')}</title></rect>
+          <!-- Triceps Medial Head (Lower) -->
+          <rect onclick="handleBodyZoneTap('triceps_medial')" x="33" y="79" width="8" height="9" rx="2" fill="${getRegionFill('triceps_medial', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_medial', missingSubRegions)}"><title>${getSubRegionLabel('triceps_medial')}</title></rect>
+          <rect onclick="handleBodyZoneTap('triceps_medial')" x="99" y="79" width="8" height="9" rx="2" fill="${getRegionFill('triceps_medial', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_medial', missingSubRegions)}"><title>${getSubRegionLabel('triceps_medial')}</title></rect>
+          <!-- Glutes -->
+          <path onclick="handleBodyZoneTap('legs_glutes')" d="M50 105 L69 105 L69 128 L49 124 Z M71 105 L90 105 L91 124 L71 128 Z" fill="${getRegionFill('legs_glutes', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_glutes', missingSubRegions)}"><title>${getSubRegionLabel('legs_glutes')}</title></path>
+          <!-- Hamstrings -->
+          <path onclick="handleBodyZoneTap('legs_hamstrings')" d="M50 131 L67 131 L65 174 L52 174 Z M73 131 L90 131 L88 174 L75 174 Z" fill="${getRegionFill('legs_hamstrings', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_hamstrings', missingSubRegions)}"><title>${getSubRegionLabel('legs_hamstrings')}</title></path>
+          <!-- Calves Back -->
+          <path onclick="handleBodyZoneTap('legs_calves')" d="M52 178 L65 178 L63 226 L54 226 Z M75 178 L88 178 L86 226 L77 226 Z" fill="${getRegionFill('legs_calves', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_calves', missingSubRegions)}"><title>${getSubRegionLabel('legs_calves')}</title></path>
+        </svg>
+      `;
+
+      const coveredTagsHtml = Array.from(coveredSubRegions).map(sr => `
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full themed-accent-bg text-[10px] font-extrabold">
+          &check; ${getSubRegionLabel(sr)}
+        </span>
+      `).join('');
+
+      const suggestionsHtml = missingCards.length > 0 ? missingCards.slice(0, 6).map(item => {
+        const exMeta = getExerciseMeta(item.exId);
+        return `
+          <button type="button" onclick="addExerciseToSession('${item.exId}')" class="p-2.5 rounded-xl themed-sub border border-amber-500/40 hover:border-emerald-400 text-left flex items-center gap-2.5 transition">
+            ${getCloseUpMuscleSvg(item.region)}
+            <div class="min-w-0 flex-1">
+              <div class="text-[10px] font-extrabold uppercase text-amber-400 truncate">+ ${getSubRegionLabel(item.region)}</div>
+              <div class="text-xs font-extrabold truncate mt-0.5">${getExerciseDisplayName(exMeta)}</div>
+              <div class="text-[10px] themed-muted">${currentLang === 'sv' ? 'Tryck för att lägga till' : 'Tap to add to session'}</div>
+            </div>
+          </button>
+        `;
+      }).join('') : `
+        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/35 text-xs font-bold text-emerald-400">
+          ${currentLang === 'sv'
+            ? 'Alla muskelhuvuden för dina aktiva muskelgrupper är fullt täckta i detta pass!'
+            : 'All anatomical muscle heads for your active muscle groups are covered in this session!'}
+        </div>
+      `;
+
+      panel.innerHTML = `
+        <div class="flex flex-col lg:flex-row gap-4 items-center lg:items-start">
+          <!-- Combined Front & Back Body Map -->
+          <div class="flex items-center justify-center gap-2 p-3 rounded-2xl themed-sub border shrink-0">
+            ${frontSvg}
+            ${backSvg}
+          </div>
+
+          <!-- Legend + Covered Heads + Smart Complementary Suggestions -->
+          <div class="flex-1 space-y-3 w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-extrabold flex items-center gap-1.5">
+                  <i data-lucide="scan-line" class="w-4 h-4 themed-accent-text"></i>
+                  <span>${t('anatomyTitle')}</span>
+                </h3>
+                <p class="text-[11px] themed-muted mt-0.5">${t('anatomySub')}</p>
+              </div>
+              <div class="flex items-center gap-3 text-[10px] font-extrabold shrink-0">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full themed-accent-bg inline-block"></span> ${currentLang === 'sv' ? 'Aktiverad' : 'Targeted'}</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> ${currentLang === 'sv' ? 'Saknad del' : 'Missing Head'}</span>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5">${coveredTagsHtml}</div>
+
+            <div class="space-y-1.5">
+              <div class="text-[11px] font-extrabold uppercase tracking-wider text-amber-400">
+                ${currentLang === 'sv' ? 'Kompletterande övningar för full muskelaktivering:' : 'Complementary Exercises for Full Muscle Activation:'}
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${suggestionsHtml}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleBodyZoneTap(regionKey) {
+      const candidate = state.exercises.find(e => e.subRegion === regionKey);
+      if (candidate) {
+        addExerciseToSession(candidate.id);
+        showToast(`${currentLang === 'sv' ? 'Lade till' : 'Added'}: ${getExerciseDisplayName(candidate)} (${getSubRegionLabel(regionKey)})`);
       }
     }
 
@@ -1301,6 +1769,7 @@
         name: exId,
         nameSv: exId,
         muscle: 'Chest',
+        subRegion: 'chest_mid',
         category: 'Free Weight',
         compound: true,
         repRange: [8, 10],
@@ -1676,15 +2145,15 @@
 
       grid.innerHTML = filtered.map(p => `
         <div class="themed-card border rounded-2xl p-4 space-y-3">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <h3 class="text-sm font-extrabold">${getExerciseDisplayName(p.exercise)}</h3>
-              <div class="flex items-center gap-1.5 mt-1">
+          <div class="flex items-start gap-2.5">
+            ${getCloseUpMuscleSvg(p.exercise.subRegion)}
+            <div class="min-w-0 flex-1">
+              <h3 class="text-sm font-extrabold truncate">${getExerciseDisplayName(p.exercise)}</h3>
+              <div class="flex items-center gap-1.5 mt-1 flex-wrap">
                 ${getEquipmentBadgeHtml(p.exercise.category)}
-                <span class="text-[11px] themed-muted">${p.exercise.muscle}</span>
+                <span class="text-[10px] font-bold themed-accent-text">${getSubRegionLabel(p.exercise.subRegion)}</span>
               </div>
             </div>
-            <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg themed-sub">e1RM: ${p.stats.bestE1RM || p.stats.actualMaxWeight} kg</span>
           </div>
 
           <div class="p-3 rounded-xl themed-sub border flex items-center justify-between">
@@ -1692,15 +2161,16 @@
               <div class="text-[10px] uppercase font-bold themed-muted">${currentLang === 'sv' ? 'Nästa Mål' : 'Next Target'}</div>
               <div class="text-base font-extrabold font-mono themed-accent-text">${p.exercise.usesUserBw ? '+' : ''}${p.targetWeight} kg &times; ${p.targetRepsText}</div>
             </div>
-            <div class="text-right text-[11px] themed-muted">
-              <div>PR: ${p.stats.actualMaxWeight} kg &times; ${p.stats.actualMaxReps}</div>
+            <div class="text-right text-[11px] themed-muted font-mono">
+              <div>e1RM: ${p.stats.bestE1RM || p.stats.actualMaxWeight} kg</div>
+              <div>PR: ${p.stats.actualMaxWeight}×${p.stats.actualMaxReps}</div>
             </div>
           </div>
         </div>
       `).join('');
     }
 
-    // ==================== WORKOUT LOGGER, WARM-UP RAMP, SUPERSETS & CUSTOM TEMPLATES ====================
+    // ==================== WORKOUT LOGGER, DRAG-AND-DROP REORDER, WARM-UP, SUPERSETS ====================
     function renderCustomTemplatesGrid() {
       const section = document.getElementById('custom-templates-section');
       const grid = document.getElementById('custom-templates-grid');
@@ -1779,6 +2249,7 @@
       document.getElementById('session-title-input').value = state.activeSession.name;
       document.getElementById('session-date-input').value = state.activeSession.date;
 
+      renderAnatomyAndCompletionPanel();
       renderActiveExercises();
       renderExercisePicker();
     }
@@ -1798,8 +2269,8 @@
             exerciseId: 'ex_bench',
             supersetGroup: null,
             targetNote: currentLang === 'sv'
-              ? 'Demo: Testa Uppvärmningsknappen eller bocka av seten för att se den smarta vilotimern!'
-              : 'Demo: Try the Warm-Up Ramp button or check off sets to test the Smart Rest Timer!',
+              ? 'Demo: Se muskelkartan ovan, dra kortet för att ändra ordning, eller bocka av set!'
+              : 'Demo: Check the anatomy map above, drag cards to reorder, or check off sets!',
             sets: [
               { weight: 50, reps: 8, pauseSec: 0, rpe: 6, type: 'warmup', completed: false },
               { weight: 80, reps: 3, pauseSec: 0, rpe: 9, type: 'working', completed: false },
@@ -1807,18 +2278,20 @@
             ]
           },
           {
-            exerciseId: 'ex_smith_incline_bench',
+            exerciseId: 'ex_db_curl',
             supersetGroup: null,
-            targetNote: 'Technogym 15 kg + 40 kg = 55 kg Total',
+            targetNote: currentLang === 'sv'
+              ? 'Demo: Träffar Biceps korta huvud — se förslagen för långa huvudet & brachialis ovan!'
+              : 'Demo: Targets Biceps Short Head — see Long Head & Brachialis suggestions above!',
             sets: [
-              { weight: 55, reps: 8, pauseSec: 0, rpe: 8, type: 'working', completed: false },
-              { weight: 55, reps: 9, pauseSec: 1, rpe: 9, type: 'working', completed: false }
+              { weight: 14, reps: 10, pauseSec: 0, rpe: 8, type: 'working', completed: false },
+              { weight: 14, reps: 10, pauseSec: 0, rpe: 8.5, type: 'working', completed: false }
             ]
           },
           {
             exerciseId: 'ex_tricep_pushdown',
             supersetGroup: null,
-            targetNote: currentLang === 'sv' ? 'Demo: Isolationsövning (kortare vila)' : 'Demo: Isolation Hypertrophy (shorter recovery)',
+            targetNote: currentLang === 'sv' ? 'Demo: Triceps laterala huvud' : 'Demo: Triceps Lateral Head',
             sets: [
               { weight: 25, reps: 12, pauseSec: 0, rpe: 8, type: 'working', completed: false },
               { weight: 25, reps: 12, pauseSec: 0, rpe: 9.5, type: 'failure', completed: false }
@@ -1829,8 +2302,8 @@
       saveState();
       switchTab('logger');
       showToast(currentLang === 'sv'
-        ? 'Exempel-testpass startat — bocka av ett set för att testa vilotimern!'
-        : 'Sample Trial Push started — check off a set to test the rest timer!');
+        ? 'Exempel-testpass startat — testa muskelkartan & vilotimern!'
+        : 'Sample Trial started — test the anatomy map & rest timer!');
     }
 
     function startSession(name, exerciseIds, isTrial = false) {
@@ -1874,6 +2347,43 @@
       saveState();
     }
 
+    // Exercise Reordering (Drag-and-Drop + Up/Down Buttons)
+    function moveExerciseInSession(fromIdx, toIdx) {
+      const list = state.activeSession.exercises;
+      if (toIdx < 0 || toIdx >= list.length || fromIdx === toIdx) return;
+      const [moved] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, moved);
+      saveState();
+      renderActiveExercises();
+    }
+
+    function handleExDragStart(e, idx) {
+      draggedExIndex = idx;
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(idx));
+      }
+      e.currentTarget.classList.add('opacity-60');
+    }
+
+    function handleExDragOver(e) {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleExDrop(e, targetIdx) {
+      e.preventDefault();
+      if (draggedExIndex !== null && draggedExIndex !== targetIdx) {
+        moveExerciseInSession(draggedExIndex, targetIdx);
+      }
+      draggedExIndex = null;
+    }
+
+    function handleExDragEnd(e) {
+      draggedExIndex = null;
+      e.currentTarget.classList.remove('opacity-60');
+    }
+
     // Warm-Up Ramp Generator
     function generateWarmupRamp(exIdx) {
       const exEntry = state.activeSession.exercises[exIdx];
@@ -1907,7 +2417,6 @@
         }
       }
 
-      // Remove existing uncompleted warmups before prepending new ramp
       exEntry.sets = [...ramp, ...exEntry.sets.filter(s => s.type !== 'warmup' || s.completed)];
       saveState();
       renderActiveExercises();
@@ -1956,13 +2465,13 @@
         return;
       }
 
+      const totalEx = state.activeSession.exercises.length;
       container.innerHTML = state.activeSession.exercises.map((exEntry, exIdx) => {
         const meta = getExerciseMeta(exEntry.exerciseId);
         const isSmith = meta.category === 'Smith Machine';
         const nextEx = state.activeSession.exercises[exIdx + 1];
         const isSupersetLinkedNext = Boolean(exEntry.supersetGroup && nextEx && nextEx.supersetGroup === exEntry.supersetGroup);
 
-        // Check real-time RPE >= 9.5 fatigue alert
         const hasHighRpeCompleted = exEntry.sets.some(s => s.completed && s.type !== 'warmup' && Number(s.rpe) >= 9.5);
         const hasRemainingWorkSets = exEntry.sets.some(s => !s.completed && s.type !== 'warmup');
         const showRpeAlert = hasHighRpeCompleted && hasRemainingWorkSets && !exEntry.rpeAlertDismissed;
@@ -1999,12 +2508,10 @@
           </div>
         ` : '';
 
-        // Mobile-First One-Handed Set Cards
         const setsHtml = exEntry.sets.map((s, setIdx) => {
           const pSec = Number(s.pauseSec) || 0;
           return `
             <div class="p-2.5 sm:p-3 rounded-xl ${s.completed ? 'bg-emerald-500/10 border border-emerald-500/40' : 'themed-sub border'} space-y-2">
-              <!-- Top Row: Set # + Type + Pause + RPE + Complete Button -->
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="w-6 h-6 rounded-lg themed-card border flex items-center justify-center font-mono text-xs font-extrabold">${setIdx + 1}</span>
@@ -2036,9 +2543,7 @@
                 </div>
               </div>
 
-              <!-- Bottom Row: One-Handed Touch Steppers for Weight & Reps -->
               <div class="grid grid-cols-2 gap-2">
-                <!-- Weight Stepper -->
                 <div class="flex items-center justify-between rounded-xl themed-card border p-1">
                   <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'weight', -2.5)" class="w-9 h-9 rounded-lg themed-sub font-mono text-xs font-extrabold active:scale-95">-2.5</button>
                   <div class="text-center">
@@ -2048,7 +2553,6 @@
                   <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'weight', 2.5)" class="w-9 h-9 rounded-lg themed-sub font-mono text-xs font-extrabold active:scale-95">+2.5</button>
                 </div>
 
-                <!-- Reps Stepper -->
                 <div class="flex items-center justify-between rounded-xl themed-card border p-1">
                   <button type="button" onclick="stepSetField(${exIdx}, ${setIdx}, 'reps', -1)" class="w-9 h-9 rounded-lg themed-sub font-mono text-sm font-extrabold active:scale-95">-1</button>
                   <div class="text-center">
@@ -2063,18 +2567,40 @@
         }).join('');
 
         return `
-          <div class="themed-card border ${exEntry.supersetGroup ? 'border-violet-500/50' : ''} rounded-2xl p-4 space-y-3">
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-              <div>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <h3 class="text-sm font-extrabold">${getExerciseDisplayName(meta)}</h3>
-                  ${getEquipmentBadgeHtml(meta.category)}
-                  ${exEntry.supersetGroup ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40">SUPERSET</span>` : ''}
+          <div draggable="true" ondragstart="handleExDragStart(event, ${exIdx})" ondragover="handleExDragOver(event)" ondrop="handleExDrop(event, ${exIdx})" ondragend="handleExDragEnd(event)" class="themed-card border ${exEntry.supersetGroup ? 'border-violet-500/50' : ''} rounded-2xl p-4 space-y-3 transition">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+              <div class="flex items-start gap-2.5 min-w-0">
+                <!-- Drag Handle + Up/Down Reorder Controls -->
+                <div class="flex flex-col items-center gap-0.5 shrink-0 pt-0.5">
+                  <div class="cursor-grab active:cursor-grabbing p-1 rounded themed-sub themed-muted" title="Drag to reorder">
+                    <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+                  </div>
+                  <div class="flex items-center gap-0.5">
+                    <button type="button" onclick="moveExerciseInSession(${exIdx}, ${exIdx - 1})" ${exIdx === 0 ? 'disabled' : ''} class="p-1 rounded themed-sub disabled:opacity-30 text-[10px]">
+                      <i data-lucide="chevron-up" class="w-3 h-3"></i>
+                    </button>
+                    <button type="button" onclick="moveExerciseInSession(${exIdx}, ${exIdx + 1})" ${exIdx === totalEx - 1 ? 'disabled' : ''} class="p-1 rounded themed-sub disabled:opacity-30 text-[10px]">
+                      <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                  </div>
                 </div>
-                <p class="text-[11px] themed-muted mt-0.5">${exEntry.targetNote || ''}</p>
+
+                <!-- Close-Up Anatomical Muscle Head SVG -->
+                ${getCloseUpMuscleSvg(meta.subRegion)}
+
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-mono font-extrabold themed-muted">#${exIdx + 1}</span>
+                    <h3 class="text-sm font-extrabold">${getExerciseDisplayName(meta)}</h3>
+                    ${getEquipmentBadgeHtml(meta.category)}
+                    ${exEntry.supersetGroup ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40">SUPERSET</span>` : ''}
+                  </div>
+                  <div class="text-[11px] font-bold themed-accent-text mt-0.5">${getSubRegionLabel(meta.subRegion)}</div>
+                  <p class="text-[11px] themed-muted mt-0.5">${exEntry.targetNote || ''}</p>
+                </div>
               </div>
 
-              <div class="flex flex-wrap items-center gap-1.5">
+              <div class="flex flex-wrap items-center gap-1.5 shrink-0">
                 <button type="button" onclick="generateWarmupRamp(${exIdx})" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-400 text-[11px] font-extrabold flex items-center gap-1">
                   <i data-lucide="flame" class="w-3.5 h-3.5"></i> ${t('warmupBtn')}
                 </button>
@@ -2172,6 +2698,7 @@
     function removeExerciseFromSession(exIdx) {
       state.activeSession.exercises.splice(exIdx, 1);
       saveState();
+      renderAnatomyAndCompletionPanel();
       renderActiveExercises();
     }
 
@@ -2183,7 +2710,6 @@
       renderActiveExercises();
 
       if (setObj.completed && restSettings.autoStart) {
-        // Superset check: if part of a superset, only trigger timer when partner exercise has equal/more completed sets
         if (exEntry.supersetGroup) {
           const peers = state.activeSession.exercises.filter(e => e.supersetGroup === exEntry.supersetGroup);
           const myCompletedCount = exEntry.sets.filter(s => s.completed).length;
@@ -2216,17 +2742,19 @@
       const q = (document.getElementById('exercise-search-input')?.value || '').toLowerCase();
       const filtered = state.exercises.filter(ex => {
         const catOk = pickerCategoryFilter === 'ALL' || (ex.category || 'Free Weight') === pickerCategoryFilter;
-        const textOk = ex.name.toLowerCase().includes(q) || (ex.nameSv || '').toLowerCase().includes(q) || ex.muscle.toLowerCase().includes(q);
+        const subLbl = getSubRegionLabel(ex.subRegion).toLowerCase();
+        const textOk = ex.name.toLowerCase().includes(q) || (ex.nameSv || '').toLowerCase().includes(q) || ex.muscle.toLowerCase().includes(q) || subLbl.includes(q);
         return catOk && textOk;
       });
 
       document.getElementById('exercise-picker-grid').innerHTML = filtered.map(ex => `
-        <button type="button" onclick="addExerciseToSession('${ex.id}')" class="p-3 rounded-xl themed-sub border hover:border-emerald-400 text-left flex items-center justify-between gap-2 transition">
-          <div class="min-w-0">
+        <button type="button" onclick="addExerciseToSession('${ex.id}')" class="p-2.5 rounded-xl themed-sub border hover:border-emerald-400 text-left flex items-center gap-2.5 transition">
+          ${getCloseUpMuscleSvg(ex.subRegion)}
+          <div class="min-w-0 flex-1">
             <div class="text-xs font-extrabold truncate">${getExerciseDisplayName(ex)}</div>
-            <div class="flex items-center gap-1.5 mt-1">
+            <div class="flex items-center gap-1.5 mt-1 flex-wrap">
               ${getEquipmentBadgeHtml(ex.category)}
-              <span class="text-[10px] themed-muted">${ex.muscle}</span>
+              <span class="text-[10px] font-bold themed-accent-text truncate">${getSubRegionLabel(ex.subRegion)}</span>
             </div>
           </div>
           <i data-lucide="plus" class="w-4 h-4 text-emerald-400 shrink-0"></i>
@@ -2250,6 +2778,7 @@
         ]
       });
       saveState();
+      renderAnatomyAndCompletionPanel();
       renderActiveExercises();
     }
 
@@ -2569,7 +3098,7 @@
 
       const newId = 'ex_imp_' + lower.replace(/[^a-z0-9]+/g, '_');
       if (!state.exercises.some(e => e.id === newId)) {
-        state.exercises.push({ id: newId, name: clean, nameSv: clean, muscle: 'Chest', category: 'Free Weight', compound: true, repRange: [8, 10], defaultPauseSec: 0 });
+        state.exercises.push({ id: newId, name: clean, nameSv: clean, muscle: 'Chest', subRegion: 'chest_mid', category: 'Free Weight', compound: true, repRange: [8, 10], defaultPauseSec: 0 });
       }
       return newId;
     }
