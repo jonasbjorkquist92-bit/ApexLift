@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="sv" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ApexLift — Gym Tracker, Progression &amp; Anatomy Optimizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-app: #020617;
+      --bg-card: #0f172a;
+      --bg-sub: #1e293b;
+      --border-main: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-contrast: #ffffff;
+      --chart-line: #3b82f6;
+      --chart-fill: rgba(59, 130, 246, 0.18);
+      --chart-grid: rgba(148, 163, 184, 0.12);
+    }
+
+    html[data-theme="obsidian"] {
+      --bg-app: #020617;
+      --bg-card: #0f172a;
+      --bg-sub: #1e293b;
+      --border-main: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-contrast: #ffffff;
+      --chart-line: #3b82f6;
+      --chart-fill: rgba(59, 130, 246, 0.18);
+      --chart-grid: rgba(148, 163, 184, 0.12);
+    }
+
+    html[data-theme="light"] {
+      --bg-app: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-sub: #e2e8f0;
+      --border-main: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --accent: #2563eb;
+      --accent-contrast: #ffffff;
+      --chart-line: #2563eb;
+      --chart-fill: rgba(37, 99, 235, 0.14);
+      --chart-grid: rgba(15, 23, 42, 0.08);
+    }
+
+    html[data-theme="crimson"] {
+      --bg-app: #09090b;
+      --bg-card: #141417;
+      --bg-sub: #222227;
+      --border-main: #27272a;
+      --text-main: #fafafa;
+      --text-muted: #a1a1aa;
+      --accent: #ef4444;
+      --accent-contrast: #ffffff;
+      --chart-line: #ef4444;
+      --chart-fill: rgba(239, 68, 68, 0.18);
+      --chart-grid: rgba(161, 161, 170, 0.12);
+    }
+
+    html[data-theme="mint"] {
+      --bg-app: #040d0a;
+      --bg-card: #0b1914;
+      --bg-sub: #132a22;
+      --border-main: #1a382e;
+      --text-main: #ecfdf5;
+      --text-muted: #94b8ab;
+      --accent: #10b981;
+      --accent-contrast: #022c22;
+      --chart-line: #10b981;
+      --chart-fill: rgba(16, 185, 129, 0.18);
+      --chart-grid: rgba(148, 184, 171, 0.12);
+    }
+
+    html[data-theme="gold"] {
+      --bg-app: #0a0908;
+      --bg-card: #161412;
+      --bg-sub: #24201c;
+      --border-main: #2e2924;
+      --text-main: #fafaf9;
+      --text-muted: #a8a29e;
+      --accent: #f59e0b;
+      --accent-contrast: #1c1917;
+      --chart-line: #f59e0b;
+      --chart-fill: rgba(245, 158, 11, 0.18);
+      --chart-grid: rgba(168, 162, 158, 0.12);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      transition: background-color 0.2s ease, color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .themed-card {
+      background-color: var(--bg-card);
+      border-color: var(--border-main);
+    }
+
+    .themed-sub {
+      background-color: var(--bg-sub);
+      border-color: var(--border-main);
+    }
+
+    .themed-muted {
+      color: var(--text-muted);
+    }
+
+    .themed-accent-bg {
+      background-color: var(--accent);
+      color: var(--accent-contrast);
+    }
+
+    .themed-accent-text {
+      color: var(--accent);
+    }
+
+    @keyframes pulseMuscle {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+
+    .muscle-missing-pulse {
+      animation: pulseMuscle 1.5s infinite ease-in-out;
+      cursor: pointer;
+    }
+
+    .muscle-zone-interactive {
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .muscle-zone-interactive:hover {
+      opacity: 0.9;
+    }
+
+    .muscle-glow {
+      filter: drop-shadow(0 0 6px var(--accent));
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    html[data-theme="light"] .text-white { color: #0f172a !important; }
+    html[data-theme="light"] .text-slate-200 { color: #1e293b !important; }
+    html[data-theme="light"] .text-slate-300 { color: #334155 !important; }
+    html[data-theme="light"] .text-slate-400 { color: #475569 !important; }
+    html[data-theme="light"] .bg-slate-950 { background-color: #f8fafc !important; }
+    html[data-theme="light"] .bg-slate-900 { background-color: #ffffff !important; }
+    html[data-theme="light"] .bg-slate-800 { background-color: #e2e8f0 !important; }
+    html[data-theme="light"] .border-slate-800,
+    html[data-theme="light"] .border-slate-700 { border-color: #cbd5e1 !important; }
+    html[data-theme="light"] .themed-accent-bg .text-white,
+    html[data-theme="light"] .themed-accent-bg { color: #ffffff !important; }
+  </style>
+</head>
+<body class="min-h-screen pb-28 lg:pb-12 antialiased">
+
+  <!-- TOP HEADER -->
+  <header class="sticky top-0 z-40 themed-card border-b backdrop-blur-md bg-opacity-95">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+      <!-- Brand -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-9 h-9 rounded-xl themed-accent-bg flex items-center justify-center shadow-md">
+          <i data-lucide="dumbbell" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="text-base font-extrabold tracking-tight block leading-none">ApexLift</span>
+          <span data-i18n="brandSub" class="text-[10px] font-semibold uppercase tracking-wider themed-muted hidden sm:block">Precision Strength</span>
+        </div>
+      </div>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden lg:flex items-center gap-1 p-1 rounded-xl themed-sub border">
+        <button onclick="switchTab('dashboard')" data-nav="dashboard" data-i18n="navDashboard" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">Dashboard</button>
+        <button onclick="switchTab('optimizer')" data-nav="optimizer" data-i18n="navOptimizer" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">Optimizer</button>
+        <button onclick="switchTab('logger')" data-nav="logger" data-i18n="navLogger" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">Workout Logger</button>
+        <button onclick="switchTab('history')" data-nav="history" data-i18n="navHistory" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition">History &amp; Data</button>
+        <button onclick="switchTab('glossary')" data-nav="glossary" class="nav-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+          <i data-lucide="book-open" class="w-3.5 h-3.5"></i> <span data-i18n="navGlossary">Glossary</span>
+        </button>
+      </nav>
+
+      <!-- Right Controls: Language + Theme + Trial + Log -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Bilingual Language Switcher (SV / EN) -->
+        <div class="flex items-center p-0.5 rounded-xl themed-sub border text-[11px] font-extrabold" title="Byt språk / Switch Language">
+          <button type="button" onclick="setLanguage('sv')" id="lang-btn-sv" class="px-2 py-1 rounded-lg transition">SV</button>
+          <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="px-2 py-1 rounded-lg transition">EN</button>
+        </div>
+
+        <!-- 5-Theme Swatches -->
+        <div class="flex items-center gap-1 px-2 py-1.5 rounded-xl themed-sub border" title="Theme">
+          <button type="button" onclick="setTheme('obsidian')" data-theme-btn="obsidian" title="Obsidian Blue" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-blue-500 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('light')" data-theme-btn="light" title="Arctic Light" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-slate-100 border border-slate-400 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('crimson')" data-theme-btn="crimson" title="Midnight Crimson" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-red-500 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('mint')" data-theme-btn="mint" title="Cyber Mint" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-emerald-400 ring-offset-2 ring-offset-slate-900 transition"></button>
+          <button type="button" onclick="setTheme('gold')" data-theme-btn="gold" title="Royal Gold" class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-amber-400 ring-offset-2 ring-offset-slate-900 transition"></button>
+        </div>
+
+        <button onclick="launchSampleTrialWorkout()" class="px-2.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-extrabold text-amber-400 flex items-center gap-1 transition">
+          <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i>
+          <span data-i18n="headerTrial" class="hidden md:inline">Trial</span>
+        </button>
+
+        <button onclick="switchTab('logger')" class="px-2.5 sm:px-3 py-2 rounded-xl themed-accent-bg text-xs font-extrabold flex items-center gap-1 shadow-md hover:opacity-90 transition">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i>
+          <span data-i18n="headerLog" class="hidden sm:inline">Log</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 themed-card border-t px-1 py-1.5 flex items-center justify-around shadow-2xl">
+    <button onclick="switchTab('dashboard')" data-nav="dashboard" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="bar-chart-3" class="w-4 h-4"></i> <span data-i18n="navDashboardShort">Stats</span>
+    </button>
+    <button onclick="switchTab('optimizer')" data-nav="optimizer" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="sparkles" class="w-4 h-4"></i> <span data-i18n="navOptimizer">Optimizer</span>
+    </button>
+    <button onclick="switchTab('logger')" data-nav="logger" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[62px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="plus-circle" class="w-4 h-4"></i> <span data-i18n="navLoggerShort">Log</span>
+    </button>
+    <button onclick="switchTab('history')" data-nav="history" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="history" class="w-4 h-4"></i> <span data-i18n="navHistoryShort">History</span>
+    </button>
+    <button onclick="switchTab('glossary')" data-nav="glossary" class="nav-btn flex flex-col items-center justify-center gap-0.5 min-w-[58px] py-1.5 rounded-xl text-[10px] font-extrabold">
+      <i data-lucide="book-open" class="w-4 h-4"></i> <span data-i18n="navGlossary">Glossary</span>
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-5 space-y-5">
+
+    <!-- ==================== TAB 1: DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-view space-y-5">
+      <!-- Sandbox Trial Callout Strip -->
+      <div class="themed-card border border-amber-500/40 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-start sm:items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/35 flex items-center justify-center text-amber-400 shrink-0">
+            <i data-lucide="flask-conical" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <div class="text-xs font-extrabold flex flex-wrap items-center gap-2">
+              <span data-i18n="trialBannerTitle">Want to test logging &amp; Smart Rest Timer first?</span>
+              <span data-i18n="trialZeroImpact" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">Zero Impact on Stats</span>
+            </div>
+            <p data-i18n="trialBannerDesc" class="text-[11px] themed-muted mt-0.5">Launch a sandbox trial workout with pre-loaded sets without affecting your real PRs or charts.</p>
+          </div>
+        </div>
+        <button type="button" onclick="launchSampleTrialWorkout()" class="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-md shrink-0 transition">
+          <i data-lucide="play" class="w-3.5 h-3.5"></i> <span data-i18n="trialStartBtn">Start Trial Workout</span>
+        </button>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span data-i18n="kpiSessions">Real Sessions</span>
+            <i data-lucide="calendar-check" class="w-4 h-4 themed-accent-text"></i>
+          </div>
+          <div id="kpi-workouts" class="text-2xl font-extrabold font-mono mt-2">0</div>
+          <div data-i18n="kpiSessionsSub" class="text-[11px] themed-muted mt-1">Excludes Sandbox Trials</div>
+        </div>
+
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span class="flex items-center gap-1"><span data-i18n="kpiTonnage">Tonnage</span> <button onclick="openGlossaryTerm('tonnage')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button></span>
+            <i data-lucide="weight" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div id="kpi-tonnage" class="text-2xl font-extrabold font-mono mt-2">0 kg</div>
+          <div data-i18n="kpiTonnageSub" class="text-[11px] themed-muted mt-1">Working sets + BW</div>
+        </div>
+
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span id="kpi-actual-pr-label" class="truncate">Selected Lift Max PR</span>
+            <i data-lucide="trophy" class="w-4 h-4 text-amber-400 shrink-0"></i>
+          </div>
+          <div id="kpi-actual-pr" class="text-2xl font-extrabold font-mono mt-2">—</div>
+          <div id="kpi-working-pr" class="text-[11px] themed-muted mt-1">Best working: —</div>
+        </div>
+
+        <div class="themed-card border rounded-2xl p-4">
+          <div class="flex items-center justify-between text-xs font-semibold themed-muted">
+            <span class="flex items-center gap-1"><span data-i18n="kpiE1rm">Est. 1RM</span> <button onclick="openGlossaryTerm('e1rm')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button></span>
+            <i data-lucide="trending-up" class="w-4 h-4 text-violet-400"></i>
+          </div>
+          <div class="flex items-baseline gap-2 mt-2">
+            <span id="kpi-e1rm" class="text-2xl font-extrabold font-mono">—</span>
+            <span id="kpi-rel-strength" class="text-xs font-extrabold font-mono text-emerald-400"></span>
+          </div>
+          <div data-i18n="kpiE1rmSub" class="text-[11px] themed-muted mt-1">Brzycki &le;8 reps (1 rep = exact)</div>
+        </div>
+      </div>
+
+      <!-- Bodyweight & Relative Strength Card -->
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <i data-lucide="scale" class="w-4 h-4 text-emerald-400"></i>
+            <h2 data-i18n="bwTitle" class="text-sm font-extrabold">Bodyweight &amp; Relative Strength (&times; BW)</h2>
+            <button onclick="openGlossaryTerm('relative-strength')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button>
+          </div>
+          <p data-i18n="bwDesc" class="text-xs themed-muted">Used to calculate relative strength ratios (e.g. 1.15&times; BW) and total load on Pull-Ups &amp; Dips.</p>
+          <div id="bw-latest-summary" class="text-xs font-mono font-bold text-emerald-400 pt-1"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="date" id="bw-date-input" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold" />
+          <div class="flex items-center gap-1">
+            <input type="number" step="0.1" id="bw-weight-input" placeholder="80.0" class="w-24 px-3 py-2 rounded-xl themed-sub border font-mono text-xs font-extrabold text-center" />
+            <span class="text-xs font-bold themed-muted">kg</span>
+          </div>
+          <button type="button" onclick="logBodyweightEntry()" class="px-3.5 py-2 rounded-xl themed-accent-bg text-xs font-extrabold flex items-center gap-1.5">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="bwLogBtn">Log BW</span>
+          </button>
+          <div id="bw-sparkline-pills" class="flex items-center gap-1 overflow-x-auto max-w-full"></div>
+        </div>
+      </div>
+
+      <!-- Progression Chart + Weekly Hypertrophy Volume -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 themed-card border rounded-2xl p-4 sm:p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 data-i18n="chartTitle" class="text-base font-extrabold">Lift Progression &amp; PR Curve</h2>
+              <p data-i18n="chartSub" class="text-xs themed-muted">Track actual top weight or conservative Brzycki e1RM over time</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="dash-category-filter" onchange="populateExerciseDropdown(); renderDashboard();" class="px-2.5 py-2 rounded-xl themed-sub border text-xs font-bold">
+                <option value="ALL" data-i18n="filterAllEq">All Equipment</option>
+                <option value="Free Weight">Free Weight</option>
+                <option value="Smith Machine">Smith Machine</option>
+                <option value="Machine / Cable">Machine / Cable</option>
+                <option value="Bodyweight">Bodyweight</option>
+              </select>
+              <select id="dash-exercise-select" onchange="renderDashboard()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold max-w-[220px]"></select>
+              <select id="dash-pause-filter" onchange="renderDashboard()" class="px-2.5 py-2 rounded-xl themed-sub border text-xs font-bold">
+                <option value="all" data-i18n="filterAllSets">All Sets</option>
+                <option value="nopause" data-i18n="filterNoPause">No-Pause</option>
+                <option value="paused" data-i18n="filterPaused">Paused Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button onclick="setChartMetric('maxWeight')" id="metric-btn-maxWeight" data-i18n="metricMaxWt" class="px-3 py-1.5 rounded-lg text-xs font-bold themed-accent-bg">Actual Max Weight</button>
+            <button onclick="setChartMetric('e1rm')" id="metric-btn-e1rm" data-i18n="metricE1rm" class="px-3 py-1.5 rounded-lg text-xs font-bold themed-sub">Est. 1RM (&le;8 reps)</button>
+            <button onclick="setChartMetric('volume')" id="metric-btn-volume" data-i18n="metricVol" class="px-3 py-1.5 rounded-lg text-xs font-bold themed-sub">Session Volume</button>
+          </div>
+
+          <div class="relative h-64 w-full">
+            <canvas id="progressionChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Weekly Hypertrophy Volume -->
+        <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+          <div>
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-base font-extrabold flex items-center gap-1.5">
+                <span data-i18n="volTitle">Weekly Volume</span>
+                <button onclick="openGlossaryTerm('hypertrophy')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button>
+              </h2>
+              <span data-i18n="volTargetBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">10–20 sets/wk</span>
+            </div>
+            <p data-i18n="volSub" class="text-xs themed-muted mt-1">Last 7 days of working sets per muscle group</p>
+          </div>
+
+          <div id="weekly-volume-bars" class="space-y-3"></div>
+
+          <div data-i18n="volFootnote" class="pt-3 border-t border-slate-800/60 text-[11px] themed-muted">
+            Warmup sets and Sandbox Trial sessions are excluded.
+          </div>
+        </div>
+      </div>
+
+      <!-- PR & Set Audit Inspector -->
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 data-i18n="auditTitle" class="text-base font-extrabold">PR &amp; Set Audit Inspector</h2>
+            <p data-i18n="auditSub" class="text-xs themed-muted">Verify every logged set for the selected exercise. Toggle Warmup/Working, Pause-Rep duration, or delete outlier sets.</p>
+          </div>
+          <span id="audit-count-badge" class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg themed-sub self-start">0 sets</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider themed-muted">
+                <th class="py-2.5 px-3" data-i18n="thDate">Date</th>
+                <th class="py-2.5 px-3" data-i18n="thSession">Session</th>
+                <th class="py-2.5 px-3" data-i18n="thLoad">Load &times; Reps</th>
+                <th class="py-2.5 px-3" data-i18n="thPause">Pause</th>
+                <th class="py-2.5 px-3" data-i18n="thType">Type</th>
+                <th class="py-2.5 px-3">Est. 1RM</th>
+                <th class="py-2.5 px-3 text-right" data-i18n="thActions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody" class="divide-y divide-slate-800/60 text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: SMART OPTIMIZER ==================== -->
+    <section id="tab-optimizer" class="tab-view hidden space-y-5">
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-extrabold flex items-center gap-2">
+            <span data-i18n="optTitle">Smart Progressive Overload Engine</span>
+            <button onclick="openGlossaryTerm('progressive-overload')" class="w-4 h-4 rounded-full themed-sub text-[10px] font-extrabold">?</button>
+          </h2>
+          <p data-i18n="optSub" class="text-xs themed-muted mt-0.5">Prescribes next target weights &amp; reps using inverse Brzycki percentages rounded to 2.5 kg increments.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="optimizer-cat-filter" onchange="renderOptimizer()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+            <option value="ALL" data-i18n="filterAllEq">All Equipment</option>
+            <option value="Free Weight">Free Weight</option>
+            <option value="Smith Machine">Smith Machine</option>
+            <option value="Machine / Cable">Machine / Cable</option>
+            <option value="Bodyweight">Bodyweight</option>
+          </select>
+          <select id="optimizer-goal-select" onchange="renderOptimizer()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+            <option value="auto" data-i18n="goalAuto">Goal: Auto-Match</option>
+            <option value="strength" data-i18n="goalStrength">Strength (3–5 reps @ ~86–91%)</option>
+            <option value="hypertrophy" data-i18n="goalHyper">Hypertrophy (8–10 reps @ ~75–79%)</option>
+            <option value="volume" data-i18n="goalVol">Volume (10–12 reps @ ~71–75%)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="optimizer-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- ==================== TAB 3: WORKOUT LOGGER ==================== -->
+    <section id="tab-logger" class="tab-view hidden space-y-5">
+      <!-- Launcher -->
+      <div id="logger-launcher" class="themed-card border rounded-2xl p-4 sm:p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 data-i18n="logStartTitle" class="text-lg font-extrabold">Start a Training Session</h2>
+            <p data-i18n="logStartSub" class="text-xs themed-muted">Choose a split pre-loaded with progressive targets, a custom template, or a Sandbox Trial.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <label data-i18n="logTargetBlock" class="text-xs font-bold themed-muted">Target Block:</label>
+            <select id="logger-goal-select" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+              <option value="auto" data-i18n="goalAuto">Auto-Match</option>
+              <option value="strength" data-i18n="goalStrength">Strength (3–5 reps)</option>
+              <option value="hypertrophy" data-i18n="goalHyper">Hypertrophy (8–10 reps)</option>
+              <option value="volume" data-i18n="goalVol">Volume (10–12 reps)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Saved Templates Section -->
+        <div id="custom-templates-section" class="hidden space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span data-i18n="myTemplatesHeading" class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">My Saved Templates</span>
+          </div>
+          <div id="custom-templates-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+        </div>
+
+        <!-- Built-In Splits -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <button onclick="startSession('Push Day', ['ex_bench', 'ex_incline_db', 'ex_ohp', 'ex_lat_raise', 'ex_tricep_pushdown'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+            <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
+            <div class="text-sm font-bold">Push Workout</div>
+            <div class="text-[11px] themed-muted mt-1">Chest, Shoulders &amp; Triceps</div>
+          </button>
+
+          <button onclick="startSession('Pull Day', ['ex_deadlift', 'ex_pullup', 'ex_barbell_row', 'ex_face_pull', 'ex_db_curl'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+            <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
+            <div class="text-sm font-bold">Pull Workout</div>
+            <div class="text-[11px] themed-muted mt-1">Back, Rear Delts &amp; Biceps</div>
+          </button>
+
+          <button onclick="startSession('Leg Day', ['ex_squat', 'ex_rdl', 'ex_leg_press', 'ex_leg_curl', 'ex_calf_raise'])" class="p-4 rounded-2xl themed-sub hover:border-blue-500/60 border text-left transition">
+            <div class="text-xs font-extrabold themed-accent-text mb-1">SPLIT</div>
+            <div class="text-sm font-bold">Legs Workout</div>
+            <div class="text-[11px] themed-muted mt-1">Quads, Hamstrings &amp; Calves</div>
+          </button>
+
+          <button onclick="startSession('Smith Machine Upper', ['ex_smith_bench', 'ex_smith_incline_bench', 'ex_smith_ohp', 'ex_lat_pulldown', 'ex_tricep_pushdown'])" class="p-4 rounded-2xl themed-sub hover:border-cyan-500/60 border text-left transition">
+            <div class="text-xs font-extrabold text-cyan-400 mb-1">SMITH SPLIT</div>
+            <div class="text-sm font-bold">Smith Upper</div>
+            <div class="text-[11px] themed-muted mt-1">Guided bar + bar weight calc</div>
+          </button>
+
+          <button onclick="startSession(t('blankSessionName'), [])" class="p-4 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-left transition">
+            <div class="text-xs font-extrabold text-emerald-400 mb-1">EMPTY</div>
+            <div data-i18n="blankSessionTitle" class="text-sm font-bold">Blank Session</div>
+            <div data-i18n="blankSessionSub" class="text-[11px] themed-muted mt-1">Pick exercises manually</div>
+          </button>
+        </div>
+
+        <!-- Sandbox Trial Launcher -->
+        <div class="pt-4 border-t border-slate-800/70">
+          <div class="bg-amber-500/10 border border-amber-500/40 rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <i data-lucide="flask-conical" class="w-4 h-4 text-amber-400"></i>
+                <h3 data-i18n="sandboxCardTitle" class="text-sm font-extrabold text-amber-400">Trial / Sandbox Workout Mode</h3>
+                <span data-i18n="trialZeroImpact" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">Excluded from Stats</span>
+              </div>
+              <p data-i18n="sandboxCardDesc" class="text-xs themed-muted leading-relaxed">
+                Practice logging sets, anatomical muscle maps, drag-and-drop ordering, and the Smart Rest Timer with zero effect on your real PRs or charts.
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button type="button" onclick="launchSampleTrialWorkout()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow-lg transition">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span data-i18n="launchSampleTrial">Launch Sample Trial Push</span>
+              </button>
+              <button type="button" onclick="startSession('Trial Workout (Sandbox)', [], true)" class="px-3.5 py-2.5 rounded-xl themed-card hover:opacity-90 border border-amber-500/40 text-xs font-extrabold text-amber-400 flex items-center gap-1.5 transition">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span data-i18n="blankTrialBtn">Blank Trial</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Session Workspace -->
+      <div id="logger-active" class="hidden space-y-4">
+        <!-- Sandbox Trial Active Banner -->
+        <div id="trial-active-banner" class="hidden bg-amber-500/15 border border-amber-400/50 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="flask-conical" class="w-5 h-5 text-amber-400 shrink-0"></i>
+            <div>
+              <div data-i18n="sandboxActiveTitle" class="text-xs font-extrabold uppercase tracking-wider text-amber-400">SANDBOX TRIAL MODE &mdash; Zero Impact on PRs &amp; Stats</div>
+              <p data-i18n="sandboxActiveSub" class="text-[11px] themed-muted">Check off any set (&check;) to test the weight- &amp; rep-correlated Smart Rest Timer.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session Top Controls -->
+        <div class="themed-card border rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="session-title-input" onchange="updateSessionMeta()" class="px-3 py-2 rounded-xl themed-sub border text-sm font-extrabold flex-1 sm:flex-initial" placeholder="Session Name" />
+            <input type="date" id="session-date-input" onchange="updateSessionMeta()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold" />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <span id="auto-save-badge" class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-emerald-400 flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3 h-3"></i> <span data-i18n="autoSavedBadge">Auto-sparad</span>
+            </span>
+            <button type="button" onclick="toggleCollapseAllExercises()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5 hover:border-blue-400">
+              <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 themed-accent-text"></i> <span id="collapse-all-label" data-i18n="collapseAllBtn">Minimera alla</span>
+            </button>
+            <button type="button" onclick="saveCurrentAsTemplate()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5 hover:border-emerald-400">
+              <i data-lucide="bookmark-plus" class="w-3.5 h-3.5 text-emerald-400"></i> <span data-i18n="saveTemplateBtn">Save as Template</span>
+            </button>
+            <button type="button" id="auto-rest-toggle-btn" onclick="toggleAutoRest()" class="px-3 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-extrabold flex items-center gap-1.5">
+              <i data-lucide="timer" class="w-3.5 h-3.5"></i> <span id="auto-rest-label">Auto-Rest: ON</span>
+            </button>
+            <button type="button" onclick="triggerManualRest(120)" class="px-2.5 py-2 rounded-xl themed-sub border text-xs font-bold">
+              2:00
+            </button>
+            <button id="discard-session-btn" onclick="discardSession()" class="px-3 py-2 rounded-xl themed-sub hover:text-rose-400 text-xs font-bold transition">Discard</button>
+            <button id="finish-session-btn" onclick="finishSession()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold shadow-lg transition">Finish &amp; Save</button>
+          </div>
+        </div>
+
+        <!-- INTERACTIVE ANATOMICAL MUSCLE MAP & SMART COMPLETION PANEL -->
+        <div id="muscle-completion-panel" class="hidden themed-card border border-blue-500/35 rounded-2xl p-4 sm:p-5 space-y-4"></div>
+
+        <!-- Active Exercise Cards (Draggable + Up/Down Reorder) -->
+        <div id="active-exercises-container" class="space-y-4"></div>
+
+        <!-- Add Exercise Picker -->
+        <div class="themed-card border rounded-2xl p-4 sm:p-5 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <h3 data-i18n="addExTitle" class="text-sm font-extrabold">Add Exercise to Session</h3>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1 p-1 rounded-xl themed-sub border text-[11px] font-bold">
+                <button type="button" onclick="setPickerCategory('ALL')" data-pcat="ALL" class="pcat-btn px-2.5 py-1 rounded-lg themed-accent-bg">All</button>
+                <button type="button" onclick="setPickerCategory('Free Weight')" data-pcat="Free Weight" class="pcat-btn px-2.5 py-1 rounded-lg">Free</button>
+                <button type="button" onclick="setPickerCategory('Smith Machine')" data-pcat="Smith Machine" class="pcat-btn px-2.5 py-1 rounded-lg">Smith</button>
+                <button type="button" onclick="setPickerCategory('Machine / Cable')" data-pcat="Machine / Cable" class="pcat-btn px-2.5 py-1 rounded-lg">Machine</button>
+                <button type="button" onclick="setPickerCategory('Bodyweight')" data-pcat="Bodyweight" class="pcat-btn px-2.5 py-1 rounded-lg">BW</button>
+              </div>
+              <input type="text" id="exercise-search-input" oninput="renderExercisePicker()" placeholder="Search..." class="px-3 py-2 rounded-xl themed-sub border text-xs font-semibold flex-1 sm:w-44" />
+            </div>
+          </div>
+
+          <div id="exercise-picker-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-80 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: HISTORY & DATA ==================== -->
+    <section id="tab-history" class="tab-view hidden space-y-5">
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 data-i18n="histTitle" class="text-lg font-extrabold">Workout History &amp; Data Management</h2>
+          <p data-i18n="histSub" class="text-xs themed-muted">Import from Strong, Hevy, StrengthLog, FitNotes, manage Sandbox Trial logs, or export JSON backups.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="history-trial-toggle-btn" onclick="toggleShowTrialWorkouts()" class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-extrabold text-amber-400 flex items-center gap-1.5">
+            <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i> <span id="history-trial-toggle-label">Hide Trial Logs (0)</span>
+          </button>
+          <button id="clear-trials-btn" onclick="clearTrialWorkouts()" class="hidden px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold text-amber-400">
+            Clear Trials
+          </button>
+          <button onclick="openCsvModal()" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> <span data-i18n="importCsvBtn">Import CSV</span>
+          </button>
+          <button onclick="exportJsonData()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400"></i> JSON
+          </button>
+          <label class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="folder-up" class="w-3.5 h-3.5 text-violet-400"></i> <span data-i18n="restoreJsonBtn">Restore</span>
+            <input type="file" accept=".json" onchange="importJsonFile(event)" class="hidden" />
+          </label>
+          <button onclick="confirmClearAllData()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-bold text-rose-400">
+            <span data-i18n="clearAllBtn">Clear All</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="history-list" class="space-y-3"></div>
+    </section>
+
+    <!-- ==================== TAB 5: GLOSSARY ==================== -->
+    <section id="tab-glossary" class="tab-view hidden space-y-5">
+      <div class="themed-card border rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 data-i18n="glossTitle" class="text-lg font-extrabold">Training Glossary &amp; Formula Reference</h2>
+          <p data-i18n="glossSub" class="text-xs themed-muted">Clear definitions of strength training science and how ApexLift calculates your metrics.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="glossary-cat-select" onchange="renderGlossary()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+            <option value="ALL" data-i18n="glossAllCat">All Categories</option>
+            <option value="Metrics & Formulas">Metrics &amp; Formulas</option>
+            <option value="Training Science">Training Science</option>
+            <option value="Set Types & Execution">Set Types &amp; Execution</option>
+            <option value="Equipment & Mechanics">Equipment &amp; Mechanics</option>
+          </select>
+          <input type="text" id="glossary-search-input" oninput="renderGlossary()" placeholder="Search..." class="px-3 py-2 rounded-xl themed-sub border text-xs font-semibold" />
+        </div>
+      </div>
+
+      <div id="glossary-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+  </main>
+
+  <!-- ==================== FULL-SCREEN SMART REST OVERLAY ==================== -->
+  <div id="smart-rest-overlay" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6">
+    <div id="smart-rest-card" class="w-full max-w-lg themed-card border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span id="smart-rest-status-badge" class="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400">Smart Rest</span>
+          <span id="smart-rest-trial-badge" class="hidden text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400">Sandbox</span>
+          <button type="button" onclick="minimizeSmartRestToPill(); openGlossaryTerm('smart-rest')" class="w-6 h-6 rounded-full themed-sub text-xs font-extrabold inline-flex items-center justify-center">?</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" id="rest-mute-btn" onclick="toggleRestMute()" class="p-2.5 rounded-xl themed-sub themed-muted hover:text-white" title="Mute / Unmute">
+            <i data-lucide="volume-2" class="w-5 h-5"></i>
+          </button>
+          <button type="button" onclick="minimizeSmartRestToPill()" class="px-3 py-2 rounded-xl themed-sub text-xs font-bold flex items-center gap-1" title="Minimera till hörn">
+            <i data-lucide="minimize-2" class="w-4 h-4"></i> <span data-i18n="minimizeRestBtn">Minimera</span>
+          </button>
+          <button type="button" onclick="dismissSmartRestOverlay()" class="p-2.5 rounded-xl themed-sub themed-muted hover:text-rose-400" title="Stäng">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Large Circular Countdown -->
+      <div class="flex flex-col items-center text-center space-y-3">
+        <div class="relative w-52 h-52 sm:w-56 sm:h-56 flex items-center justify-center">
+          <svg class="w-full h-full -rotate-90" viewBox="0 0 220 220">
+            <circle cx="110" cy="110" r="96" fill="none" stroke="currentColor" stroke-width="10" class="text-slate-800"></circle>
+            <circle id="smart-rest-ring" cx="110" cy="110" r="96" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-dasharray="603.2" stroke-dashoffset="0" class="text-emerald-400 transition-all duration-300"></circle>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span id="smart-rest-time" class="font-mono text-5xl sm:text-6xl font-extrabold tracking-tight">02:00</span>
+            <span data-i18n="restRecoveryLabel" class="text-[11px] font-extrabold uppercase tracking-widest themed-muted mt-1">Återhämtning</span>
+          </div>
+        </div>
+
+        <div class="space-y-1 max-w-md">
+          <h4 id="smart-rest-exercise" class="text-lg sm:text-xl font-extrabold">Barbell Bench Press</h4>
+          <p id="smart-rest-set-summary" class="text-sm font-mono font-bold themed-accent-text">80 kg &times; 3 reps</p>
+        </div>
+      </div>
+
+      <div id="smart-rest-rationale" class="text-xs sm:text-sm font-semibold px-4 py-3 rounded-2xl themed-sub border text-center leading-relaxed"></div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        <button type="button" onclick="adjustSmartRest(-15)" class="py-3.5 rounded-2xl themed-sub border text-sm font-mono font-extrabold active:scale-95">-15s</button>
+        <button type="button" onclick="adjustSmartRest(15)" class="py-3.5 rounded-2xl themed-sub border text-sm font-mono font-extrabold active:scale-95">+15s</button>
+        <button type="button" id="rest-pause-btn" onclick="togglePauseSmartRest()" class="py-3.5 rounded-2xl themed-sub border text-sm font-extrabold active:scale-95">Pause</button>
+        <button type="button" onclick="dismissSmartRestOverlay()" data-i18n="skipRestBtn" class="py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-extrabold shadow-lg active:scale-95">Skip Rest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimized Rest Pill (when user minimizes full-screen rest to check exercises) -->
+  <button type="button" id="smart-rest-mini-pill" onclick="expandSmartRestFromPill()" class="hidden fixed bottom-20 lg:bottom-6 right-4 z-50 px-4 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-mono text-sm font-extrabold shadow-2xl flex items-center gap-2 border-2 border-white/30">
+    <i data-lucide="timer" class="w-4 h-4"></i>
+    <span id="smart-rest-mini-time">02:00</span>
+    <span class="text-[10px] font-sans uppercase underline ml-1" data-i18n="expandRestBtn">Visa</span>
+  </button>
+
+  <!-- ==================== POST-WORKOUT PROGRESSION REVIEW MODAL ==================== -->
+  <div id="progression-review-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="themed-card border rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-5 shadow-2xl">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400" data-i18n="progModalBadge">Pass slutfört</span>
+          <h3 data-i18n="progModalTitle" class="text-lg font-extrabold mt-1">Förslag inför nästa träningspass</h3>
+          <p data-i18n="progModalSub" class="text-xs themed-muted mt-0.5">Bekräfta eller neka föreslagna vikter och repetitioner. Bekräftade mål sparas och laddas automatiskt nästa gång.</p>
+        </div>
+        <button type="button" onclick="closeProgressionReviewModal()" class="p-2 rounded-xl themed-sub"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div id="progression-review-list" class="space-y-3"></div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800">
+        <button type="button" onclick="confirmAllProgressionProposals()" class="px-4 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-xs font-extrabold flex items-center gap-1.5">
+          <i data-lucide="check-check" class="w-4 h-4"></i> <span data-i18n="confirmAllBtn">Bekräfta alla</span>
+        </button>
+        <button type="button" onclick="closeProgressionReviewModal()" data-i18n="doneReviewBtn" class="px-5 py-2.5 rounded-xl themed-accent-bg text-xs font-extrabold shadow-md">
+          Klar &amp; gå till Översikt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== REPLACE OCCUPIED EXERCISE MODAL ==================== -->
+  <div id="replace-exercise-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="themed-card border rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-2xl">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400" data-i18n="replaceBadge">Maskin upptagen?</span>
+          <h3 id="replace-modal-title" class="text-base sm:text-lg font-extrabold mt-1">Ersätt övning</h3>
+          <p id="replace-modal-sub" class="text-xs themed-muted mt-0.5">Föreslår övningar som belastar exakt samma muskelgrupp och muskelhuvud.</p>
+        </div>
+        <button type="button" onclick="closeReplaceModal()" class="p-2 rounded-xl themed-sub"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div id="replace-tier1-section" class="space-y-2">
+        <div class="text-xs font-extrabold uppercase tracking-wider text-emerald-400" data-i18n="replaceTier1Title">Exakt muskelhuvud-matchning</div>
+        <div id="replace-tier1-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+      </div>
+
+      <div id="replace-tier2-section" class="space-y-2 pt-2 border-t border-slate-800/70">
+        <div class="text-xs font-extrabold uppercase tracking-wider themed-muted" data-i18n="replaceTier2Title">Övriga övningar för samma muskelgrupp</div>
+        <div id="replace-tier2-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SAVE TEMPLATE MODAL ==================== -->
+  <div id="template-name-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="themed-card border rounded-2xl w-full max-w-md p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 data-i18n="tplModalTitle" class="text-base font-extrabold">Spara pass som mall</h3>
+        <button type="button" onclick="closeTemplateNameModal()" class="p-1.5 rounded-xl themed-sub"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <p data-i18n="tplModalSub" class="text-xs themed-muted">Ge mallen ett namn så hittar du den under "Mina Sparade Mallar" nästa gång.</p>
+      <input type="text" id="template-name-input" class="w-full px-3.5 py-2.5 rounded-xl themed-sub border text-sm font-bold" />
+      <div class="flex items-center justify-end gap-2">
+        <button type="button" onclick="closeTemplateNameModal()" data-i18n="cancelBtn" class="px-4 py-2 rounded-xl themed-sub text-xs font-bold">Avbryt</button>
+        <button type="button" onclick="confirmSaveTemplateModal()" data-i18n="saveBtn" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-extrabold">Spara mall</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CSV IMPORTER MODAL ==================== -->
+  <div id="csv-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="themed-card border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 data-i18n="csvModalTitle" class="text-base font-extrabold">Universal CSV &amp; App Data Importer</h3>
+          <p data-i18n="csvModalSub" class="text-xs themed-muted">Supports Strong, Hevy, StrengthLog, FitNotes (EN/SV names &amp; automatic lbs &rarr; kg).</p>
+        </div>
+        <button onclick="closeCsvModal()" class="p-2 rounded-xl themed-sub"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <label class="px-4 py-2 rounded-xl themed-accent-bg text-xs font-extrabold cursor-pointer inline-flex items-center gap-1.5">
+          <i data-lucide="upload" class="w-4 h-4"></i> <span data-i18n="chooseCsvBtn">Choose CSV File</span>
+          <input type="file" accept=".csv,.tsv,.txt" onchange="handleCsvFileUpload(event)" class="hidden" />
+        </label>
+        <select id="csv-unit-select" onchange="parseCsvInput()" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+          <option value="auto">Units: Auto-Detect</option>
+          <option value="kg">Kilograms (kg)</option>
+          <option value="lbs">Pounds (lbs &rarr; kg)</option>
+        </select>
+        <select id="csv-mode-select" class="px-3 py-2 rounded-xl themed-sub border text-xs font-bold">
+          <option value="replace">Mode: Replace Existing</option>
+          <option value="merge">Mode: Merge (Skip Duplicates)</option>
+        </select>
+      </div>
+
+      <textarea id="csv-raw-textarea" oninput="parseCsvInput()" rows="6" placeholder="Date, Workout Name, Exercise Name, Set Order, Weight, Reps, RPE..." class="w-full p-3 rounded-xl themed-sub border font-mono text-xs"></textarea>
+
+      <div id="csv-preview-box" class="hidden p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-1">
+        <div id="csv-preview-summary" class="font-extrabold text-emerald-400"></div>
+        <div id="csv-preview-details" class="themed-muted"></div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="closeCsvModal()" class="px-4 py-2 rounded-xl themed-sub text-xs font-bold">Cancel</button>
+        <button id="csv-confirm-btn" onclick="commitCsvImport()" disabled class="px-4 py-2 rounded-xl bg-emerald-500 disabled:opacity-40 text-slate-950 text-xs font-extrabold">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast-box" class="hidden fixed top-20 right-4 z-50 px-4 py-2.5 rounded-xl themed-card border border-emerald-500/50 shadow-xl text-xs font-extrabold"></div>
+
+  <script>
+    // ==================== STORAGE KEYS (PRESERVING apexlift_v4_data) ====================
+    const STORAGE_KEY = 'apexlift_v4_data';
+    const ACTIVE_SESSION_KEY = 'apexlift_active_session';
+    const THEME_KEY = 'apexlift_theme';
+    const LANG_KEY = 'apexlift_lang';
+    const SMITH_KEY = 'apexlift_smith_cfg';
+    const REST_KEY = 'apexlift_rest_cfg';
+
+    let currentLang = localStorage.getItem(LANG_KEY) || 'sv';
+// ... existing code ... -->
+        addSetBtn: '+ Add Set',
+        linkSupersetBtn: 'Link Superset',
+        unlinkSupersetBtn: 'Unlink Superset',
+        rpeAlertTitle: 'High Fatigue Detected (@RPE ≥ 9.5)',
+        rpeAlertApply: 'Drop -2.5 kg on Remaining Sets',
+        anatomyTitle: 'Anatomical Muscle Map & Smart Completion',
+        anatomySub: 'Glowing zones show targeted muscle heads. Tap any pulsing unworked zone to add a complementary exercise.',
+        autoSavedBadge: 'Auto-saved',
+        collapseAllBtn: 'Collapse All',
+        expandAllBtn: 'Expand All',
+        replaceBtn: 'Replace',
+        replaceBadge: 'Machine Occupied?',
+        replaceTier1Title: 'Exact Muscle Head Match',
+        replaceTier2Title: 'Other Exercises for Same Muscle Group',
+        minimizeRestBtn: 'Minimize',
+        expandRestBtn: 'Expand',
+        restRecoveryLabel: 'Recovery',
+        skipRestBtn: 'Skip Rest',
+        progModalBadge: 'Session Completed',
+        progModalTitle: 'Next Session Progression Proposals',
+        progModalSub: 'Confirm or reject proposed weights & reps. Confirmed targets are saved and auto-loaded next time.',
+        confirmAllBtn: 'Confirm All',
+        doneReviewBtn: 'Done & View Dashboard',
+        tplModalTitle: 'Save Workout as Template',
+        tplModalSub: 'Name this template to access it anytime under "My Saved Templates".',
+        cancelBtn: 'Cancel',
+        saveBtn: 'Save Template'
+      },
+      sv: {
+        brandSub: 'Precisionsstyrka',
+// ... existing code ... -->
+        addSetBtn: '+ Lägg till set',
+        linkSupersetBtn: 'Länka Superset',
+        unlinkSupersetBtn: 'Bryt Superset',
+        rpeAlertTitle: 'Hög utmattning (@RPE ≥ 9.5)',
+        rpeAlertApply: 'Sänk -2.5 kg på kvarvarande set',
+        anatomyTitle: 'Anatomisk Muskelkarta & Smart Komplettering',
+        anatomySub: 'Upplysta zoner visar vilka muskelhuvuden du täckt. Tryck på en pulserande zon för att lägga till kompletterande övning.',
+        autoSavedBadge: 'Auto-sparad',
+        collapseAllBtn: 'Minimera alla',
+        expandAllBtn: 'Expandera alla',
+        replaceBtn: 'Ersätt',
+        replaceBadge: 'Maskin upptagen?',
+        replaceTier1Title: 'Exakt muskelhuvud-matchning',
+        replaceTier2Title: 'Övriga övningar för samma muskelgrupp',
+        minimizeRestBtn: 'Minimera',
+        expandRestBtn: 'Visa',
+        restRecoveryLabel: 'Återhämtning',
+        skipRestBtn: 'Hoppa över vila',
+        progModalBadge: 'Pass slutfört',
+        progModalTitle: 'Förslag inför nästa träningspass',
+        progModalSub: 'Bekräfta eller neka föreslagna vikter och repetitioner. Bekräftade mål sparas och laddas automatiskt nästa gång.',
+        confirmAllBtn: 'Bekräfta alla',
+        doneReviewBtn: 'Klar & gå till Översikt',
+        tplModalTitle: 'Spara pass som mall',
+        tplModalSub: 'Ge mallen ett namn så hittar du den under "Mina Sparade Mallar" nästa gång.',
+        cancelBtn: 'Avbryt',
+        saveBtn: 'Spara mall'
+      }
+    };
+
+    function t(key) {
+// ... existing code ... -->
+    let state = {
+      exercises: [...DEFAULT_EXERCISES],
+      workouts: [],
+      bodyweights: [],
+      customTemplates: [],
+      approvedTargets: {},
+      activeSession: null
+    };
+    let smithConfig = { presetId: 'technogym', barWeight: 15 };
+    let restSettings = { autoStart: true, muted: false };
+    let chartInstance = null;
+    let currentChartMetric = 'maxWeight';
+    let pickerCategoryFilter = 'ALL';
+    let showTrialWorkoutsInHistory = true;
+    let parsedCsvWorkouts = [];
+    let draggedExIndex = null;
+    let replaceTargetExIdx = null;
+    let pendingTemplateExerciseIds = [];
+    let pendingProgressionProposals = [];
+
+    // Smart Rest Timer Runtime
+    let restTimerInterval = null;
+    let restRemainingSec = 0;
+    let restTotalSec = 120;
+    let restPaused = false;
+    let restMinimized = false;
+
+    // ==================== PERSISTENCE (PRESERVING apexlift_v4_data + ACTIVE SESSION AUTO-SAVE) ====================
+    function loadAllState() {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'obsidian';
+      setTheme(savedTheme, false);
+
+      try {
+        const sc = JSON.parse(localStorage.getItem(SMITH_KEY));
+        if (sc && typeof sc.barWeight === 'number') smithConfig = sc;
+      } catch (_) {}
+
+      try {
+        const rc = JSON.parse(localStorage.getItem(REST_KEY));
+        if (rc) restSettings = { ...restSettings, ...rc };
+      } catch (_) {}
+
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (raw && Array.isArray(raw.workouts)) {
+          const cleanWorkouts = raw.workouts.filter(w => !String(w.id || '').startsWith('sample_'));
+          const mergedExercises = [...DEFAULT_EXERCISES];
+          (raw.exercises || []).forEach(ex => {
+            if (!mergedExercises.some(d => d.id === ex.id)) mergedExercises.push(ex);
+          });
+          state = {
+            exercises: mergedExercises,
+            workouts: cleanWorkouts,
+            bodyweights: Array.isArray(raw.bodyweights) ? raw.bodyweights : [],
+            customTemplates: Array.isArray(raw.customTemplates) ? raw.customTemplates : [],
+            approvedTargets: raw.approvedTargets && typeof raw.approvedTargets === 'object' ? raw.approvedTargets : {},
+            activeSession: raw.activeSession || null
+          };
+        }
+      } catch (_) {}
+
+      // Restore unfinished active session from dedicated auto-save key
+      try {
+        const savedActive = JSON.parse(localStorage.getItem(ACTIVE_SESSION_KEY));
+        if (savedActive && Array.isArray(savedActive.exercises)) {
+          state.activeSession = savedActive;
+        }
+      } catch (_) {}
+
+      saveState();
+      updateAutoRestUI();
+      applyLanguageUI();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (state.activeSession) {
+        localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(state.activeSession));
+      } else {
+        localStorage.removeItem(ACTIVE_SESSION_KEY);
+      }
+    }
+
+    function saveSmithConfig() {
+// ... existing code ... -->
+    // ==================== INTERACTIVE ANATOMICAL SVG ENGINE ====================
+    // 1) High-Clarity Close-Up SVG Diagram showing exact muscle head/region targeted
+    function getCloseUpMuscleSvg(subRegion, sizeClass = 'w-16 h-16 sm:w-20 sm:h-20') {
+      const baseFill = 'rgba(148, 163, 184, 0.25)';
+      const activeFill = 'var(--accent)';
+      const strokeCol = 'rgba(248, 250, 252, 0.45)';
+      const r = subRegion || 'chest_mid';
+
+      // Biceps & Brachialis close-up arm diagram
+      if (r.startsWith('biceps_')) {
+        const isLong = r === 'biceps_long';
+        const isShort = r === 'biceps_short';
+        const isBrach = r === 'biceps_brachialis';
+        return `
+          <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Arm & Forearm Silhouette -->
+            <path d="M16 16 C28 10, 44 14, 52 28 L66 56 C68 62, 62 67, 56 63 L43 44 L22 54 C14 57, 9 48, 12 37 Z" fill="rgba(148,163,184,0.12)" stroke="${strokeCol}" stroke-width="2"/>
+            <!-- Biceps Long Head (Outer peak) -->
+            <path d="M20 22 C30 15, 42 20, 45 33 C38 30, 28 29, 20 31 Z" fill="${isLong ? activeFill : baseFill}" class="${isLong ? 'muscle-glow' : ''}" stroke="${isLong ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Biceps Short Head (Inner belly) -->
+            <path d="M20 32 C28 29, 39 30, 45 34 C42 43, 30 45, 20 40 Z" fill="${isShort ? activeFill : baseFill}" class="${isShort ? 'muscle-glow' : ''}" stroke="${isShort ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Brachialis (Lower lateral elbow/forearm) -->
+            <path d="M26 42 C34 44, 44 41, 49 47 C46 53, 35 54, 27 49 Z" fill="${isBrach ? activeFill : baseFill}" class="${isBrach ? 'muscle-glow' : ''}" stroke="${isBrach ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Fiber Striation Lines -->
+            <path d="M25 26 Q34 24 41 29 M25 36 Q34 35 41 38" stroke="#ffffff" stroke-opacity="0.45" stroke-width="1.2" fill="none"/>
+          </svg>
+        `;
+      }
+
+      // Triceps 3-head close-up diagram
+      if (r.startsWith('triceps_')) {
+        const isLong = r === 'triceps_long';
+        const isLat = r === 'triceps_lateral';
+        const isMed = r === 'triceps_medial';
+        return `
+          <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <rect x="22" y="10" width="36" height="60" rx="14" fill="rgba(148,163,184,0.12)" stroke="${strokeCol}" stroke-width="2"/>
+            <!-- Long Head (Inner posterior) -->
+            <path d="M26 16 C32 16, 38 25, 38 46 L26 46 Z" fill="${isLong ? activeFill : baseFill}" class="${isLong ? 'muscle-glow' : ''}" stroke="${isLong ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Lateral Head (Outer horseshoe) -->
+            <path d="M41 16 C49 18, 54 28, 52 46 L41 46 Z" fill="${isLat ? activeFill : baseFill}" class="${isLat ? 'muscle-glow' : ''}" stroke="${isLat ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Medial Head (Lower near elbow) -->
+            <path d="M28 48 L50 48 L47 64 L31 64 Z" fill="${isMed ? activeFill : baseFill}" class="${isMed ? 'muscle-glow' : ''}" stroke="${isMed ? '#ffffff' : 'none'}" stroke-width="1"/>
+          </svg>
+        `;
+      }
+
+      // Chest 3-zone close-up diagram
+      if (r.startsWith('chest_')) {
+        const isUpper = r === 'chest_upper';
+        const isMid = r === 'chest_mid';
+        const isLower = r === 'chest_lower';
+        return `
+          <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Upper Clavicular Fibers -->
+            <path d="M10 20 L38 26 L38 35 L12 30 Z M70 20 L42 26 L42 35 L68 30 Z" fill="${isUpper ? activeFill : baseFill}" class="${isUpper ? 'muscle-glow' : ''}" stroke="${isUpper ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Mid Sternal Fibers -->
+            <path d="M12 32 L38 37 L38 48 L14 45 Z M68 32 L42 37 L42 48 L66 45 Z" fill="${isMid ? activeFill : baseFill}" class="${isMid ? 'muscle-glow' : ''}" stroke="${isMid ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Lower Costal Fibers -->
+            <path d="M15 47 L38 50 L35 60 L18 56 Z M65 47 L42 50 L45 60 L62 56 Z" fill="${isLower ? activeFill : baseFill}" class="${isLower ? 'muscle-glow' : ''}" stroke="${isLower ? '#ffffff' : 'none'}" stroke-width="1"/>
+          </svg>
+        `;
+      }
+
+      // Shoulders 3-head deltoid close-up
+      if (r.startsWith('shoulders_')) {
+        const isFront = r === 'shoulders_front';
+        const isSide = r === 'shoulders_side';
+        const isRear = r === 'shoulders_rear';
+        return `
+          <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Front Delt -->
+            <path d="M14 26 C20 18, 30 18, 32 29 L29 56 C20 53, 14 42, 14 26 Z" fill="${isFront ? activeFill : baseFill}" class="${isFront ? 'muscle-glow' : ''}" stroke="${isFront ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Lateral / Side Delt -->
+            <path d="M34 18 C40 15, 46 18, 48 29 L46 60 L34 60 Z" fill="${isSide ? activeFill : baseFill}" class="${isSide ? 'muscle-glow' : ''}" stroke="${isSide ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Rear Delt -->
+            <path d="M50 24 C59 22, 66 30, 64 44 L50 56 Z" fill="${isRear ? activeFill : baseFill}" class="${isRear ? 'muscle-glow' : ''}" stroke="${isRear ? '#ffffff' : 'none'}" stroke-width="1"/>
+          </svg>
+        `;
+      }
+
+      // Back Lats vs Mid-Back vs Erectors
+      if (r.startsWith('back_')) {
+        const isLats = r === 'back_lats';
+        const isMid = r === 'back_mid';
+        const isErect = r === 'back_erectors';
+        return `
+          <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Traps / Mid-Back -->
+            <path d="M26 16 L40 10 L54 16 L49 41 L31 41 Z" fill="${isMid ? activeFill : baseFill}" class="${isMid ? 'muscle-glow' : ''}" stroke="${isMid ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Lats V-Taper -->
+            <path d="M14 27 L29 30 L29 58 L20 49 Z M66 27 L51 30 L51 58 L60 49 Z" fill="${isLats ? activeFill : baseFill}" class="${isLats ? 'muscle-glow' : ''}" stroke="${isLats ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Spinal Erectors -->
+            <path d="M31 43 L49 43 L46 68 L34 68 Z" fill="${isErect ? activeFill : baseFill}" class="${isErect ? 'muscle-glow' : ''}" stroke="${isErect ? '#ffffff' : 'none'}" stroke-width="1"/>
+          </svg>
+        `;
+      }
+
+      // Legs Quads vs Hamstrings vs Glutes vs Calves
+      if (r.startsWith('legs_')) {
+        const isQuads = r === 'legs_quads';
+        const isHams = r === 'legs_hamstrings';
+        const isGlutes = r === 'legs_glutes';
+        const isCalves = r === 'legs_calves';
+        return `
+          <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+            <!-- Glutes -->
+            <path d="M22 10 L58 10 L61 27 L19 27 Z" fill="${isGlutes ? activeFill : baseFill}" class="${isGlutes ? 'muscle-glow' : ''}" stroke="${isGlutes ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Quads (Left leg) -->
+            <path d="M20 30 L37 30 L34 52 L22 52 Z" fill="${isQuads ? activeFill : baseFill}" class="${isQuads ? 'muscle-glow' : ''}" stroke="${isQuads ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Hamstrings (Right leg) -->
+            <path d="M43 30 L60 30 L58 52 L46 52 Z" fill="${isHams ? activeFill : baseFill}" class="${isHams ? 'muscle-glow' : ''}" stroke="${isHams ? '#ffffff' : 'none'}" stroke-width="1"/>
+            <!-- Calves -->
+            <path d="M24 55 L34 55 L32 71 L26 71 Z M46 55 L56 55 L54 71 L48 71 Z" fill="${isCalves ? activeFill : baseFill}" class="${isCalves ? 'muscle-glow' : ''}" stroke="${isCalves ? '#ffffff' : 'none'}" stroke-width="1"/>
+          </svg>
+        `;
+      }
+
+      // Core / Abs
+      return `
+        <svg viewBox="0 0 80 80" class="${sizeClass} rounded-2xl themed-sub border p-1.5 shrink-0" aria-label="${getSubRegionLabel(r)}">
+          <rect x="26" y="14" width="11" height="13" rx="3" fill="${activeFill}" class="muscle-glow"/>
+          <rect x="43" y="14" width="11" height="13" rx="3" fill="${activeFill}" class="muscle-glow"/>
+          <rect x="26" y="31" width="11" height="13" rx="3" fill="${activeFill}" class="muscle-glow"/>
+          <rect x="43" y="31" width="11" height="13" rx="3" fill="${activeFill}" class="muscle-glow"/>
+          <rect x="26" y="48" width="11" height="16" rx="3" fill="${activeFill}" class="muscle-glow"/>
+          <rect x="43" y="48" width="11" height="16" rx="3" fill="${activeFill}" class="muscle-glow"/>
+        </svg>
+      `;
+    }
+// ... existing code ... -->
+      const frontSvg = `
+        <svg viewBox="0 0 150 265" class="w-40 sm:w-44 h-auto shrink-0 select-none">
+          <text x="75" y="14" text-anchor="middle" fill="currentColor" opacity="0.7" font-size="10" font-weight="800">${currentLang === 'sv' ? 'FRAMSIDA' : 'FRONT'}</text>
+          <!-- Silhouette -->
+          <circle cx="75" cy="30" r="11" fill="rgba(148,163,184,0.22)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <path d="M54 45 L96 45 L102 122 L48 122 Z" fill="rgba(148,163,184,0.12)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <!-- Shoulders Front -->
+          <ellipse onclick="handleBodyZoneTap('shoulders_front')" cx="45" cy="52" rx="8" ry="10" fill="${getRegionFill('shoulders_front', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_front', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_front')}</title></ellipse>
+          <ellipse onclick="handleBodyZoneTap('shoulders_front')" cx="105" cy="52" rx="8" ry="10" fill="${getRegionFill('shoulders_front', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_front', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_front')}</title></ellipse>
+          <!-- Shoulders Side -->
+          <ellipse onclick="handleBodyZoneTap('shoulders_side')" cx="37" cy="56" rx="4.5" ry="9" fill="${getRegionFill('shoulders_side', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_side', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_side')}</title></ellipse>
+          <ellipse onclick="handleBodyZoneTap('shoulders_side')" cx="113" cy="56" rx="4.5" ry="9" fill="${getRegionFill('shoulders_side', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_side', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_side')}</title></ellipse>
+          <!-- Chest Upper -->
+          <path onclick="handleBodyZoneTap('chest_upper')" d="M54 47 L74 51 L74 58 L53 55 Z M96 47 L76 51 L76 58 L97 55 Z" fill="${getRegionFill('chest_upper', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('chest_upper', missingSubRegions)}"><title>${getSubRegionLabel('chest_upper')}</title></path>
+          <!-- Chest Mid -->
+          <path onclick="handleBodyZoneTap('chest_mid')" d="M53 56 L74 59 L74 68 L54 65 Z M97 56 L76 59 L76 68 L96 65 Z" fill="${getRegionFill('chest_mid', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('chest_mid', missingSubRegions)}"><title>${getSubRegionLabel('chest_mid')}</title></path>
+          <!-- Chest Lower -->
+          <path onclick="handleBodyZoneTap('chest_lower')" d="M55 66 L74 69 L73 76 L57 72 Z M95 66 L76 69 L77 76 L93 72 Z" fill="${getRegionFill('chest_lower', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('chest_lower', missingSubRegions)}"><title>${getSubRegionLabel('chest_lower')}</title></path>
+          <!-- Biceps Long Head (Outer) -->
+          <rect onclick="handleBodyZoneTap('biceps_long')" x="32" y="66" width="6" height="25" rx="3" fill="${getRegionFill('biceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_long', missingSubRegions)}"><title>${getSubRegionLabel('biceps_long')}</title></rect>
+          <rect onclick="handleBodyZoneTap('biceps_long')" x="112" y="66" width="6" height="25" rx="3" fill="${getRegionFill('biceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_long', missingSubRegions)}"><title>${getSubRegionLabel('biceps_long')}</title></rect>
+          <!-- Biceps Short Head (Inner) -->
+          <rect onclick="handleBodyZoneTap('biceps_short')" x="39" y="66" width="6" height="25" rx="3" fill="${getRegionFill('biceps_short', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_short', missingSubRegions)}"><title>${getSubRegionLabel('biceps_short')}</title></rect>
+          <rect onclick="handleBodyZoneTap('biceps_short')" x="105" y="66" width="6" height="25" rx="3" fill="${getRegionFill('biceps_short', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_short', missingSubRegions)}"><title>${getSubRegionLabel('biceps_short')}</title></rect>
+          <!-- Brachialis (Lower outer arm / forearm) -->
+          <rect onclick="handleBodyZoneTap('biceps_brachialis')" x="33" y="92" width="10" height="22" rx="4" fill="${getRegionFill('biceps_brachialis', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_brachialis', missingSubRegions)}"><title>${getSubRegionLabel('biceps_brachialis')}</title></rect>
+          <rect onclick="handleBodyZoneTap('biceps_brachialis')" x="107" y="92" width="10" height="22" rx="4" fill="${getRegionFill('biceps_brachialis', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('biceps_brachialis', missingSubRegions)}"><title>${getSubRegionLabel('biceps_brachialis')}</title></rect>
+          <!-- Core / Abs -->
+          <rect onclick="handleBodyZoneTap('core_abs')" x="61" y="79" width="28" height="41" rx="5" fill="${getRegionFill('core_abs', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('core_abs', missingSubRegions)}"><title>${getSubRegionLabel('core_abs')}</title></rect>
+          <!-- Quads -->
+          <path onclick="handleBodyZoneTap('legs_quads')" d="M52 126 L72 126 L70 185 L54 185 Z M78 126 L98 126 L96 185 L80 185 Z" fill="${getRegionFill('legs_quads', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_quads', missingSubRegions)}"><title>${getSubRegionLabel('legs_quads')}</title></path>
+          <!-- Calves Front -->
+          <path onclick="handleBodyZoneTap('legs_calves')" d="M55 191 L69 191 L67 244 L57 244 Z M81 191 L95 191 L93 244 L83 244 Z" fill="${getRegionFill('legs_calves', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_calves', missingSubRegions)}"><title>${getSubRegionLabel('legs_calves')}</title></path>
+        </svg>
+      `;
+
+      const backSvg = `
+        <svg viewBox="0 0 150 265" class="w-40 sm:w-44 h-auto shrink-0 select-none">
+          <text x="75" y="14" text-anchor="middle" fill="currentColor" opacity="0.7" font-size="10" font-weight="800">${currentLang === 'sv' ? 'BAKSIDA' : 'BACK'}</text>
+          <circle cx="75" cy="30" r="11" fill="rgba(148,163,184,0.22)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <!-- Rear Delts -->
+          <ellipse onclick="handleBodyZoneTap('shoulders_rear')" cx="43" cy="52" rx="8" ry="9" fill="${getRegionFill('shoulders_rear', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_rear', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_rear')}</title></ellipse>
+          <ellipse onclick="handleBodyZoneTap('shoulders_rear')" cx="107" cy="52" rx="8" ry="9" fill="${getRegionFill('shoulders_rear', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('shoulders_rear', missingSubRegions)}"><title>${getSubRegionLabel('shoulders_rear')}</title></ellipse>
+          <!-- Mid-Back / Traps -->
+          <path onclick="handleBodyZoneTap('back_mid')" d="M57 43 L75 37 L93 43 L87 80 L63 80 Z" fill="${getRegionFill('back_mid', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('back_mid', missingSubRegions)}"><title>${getSubRegionLabel('back_mid')}</title></path>
+          <!-- Lats -->
+          <path onclick="handleBodyZoneTap('back_lats')" d="M49 58 L62 63 L62 100 L52 89 Z M101 58 L88 63 L88 100 L98 89 Z" fill="${getRegionFill('back_lats', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('back_lats', missingSubRegions)}"><title>${getSubRegionLabel('back_lats')}</title></path>
+          <!-- Lower Back / Erectors -->
+          <rect onclick="handleBodyZoneTap('back_erectors')" x="64" y="82" width="22" height="29" rx="4" fill="${getRegionFill('back_erectors', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('back_erectors', missingSubRegions)}"><title>${getSubRegionLabel('back_erectors')}</title></rect>
+          <!-- Triceps Long Head (Inner) -->
+          <rect onclick="handleBodyZoneTap('triceps_long')" x="39" y="63" width="5.5" height="22" rx="2.5" fill="${getRegionFill('triceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_long', missingSubRegions)}"><title>${getSubRegionLabel('triceps_long')}</title></rect>
+          <rect onclick="handleBodyZoneTap('triceps_long')" x="105.5" y="63" width="5.5" height="22" rx="2.5" fill="${getRegionFill('triceps_long', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_long', missingSubRegions)}"><title>${getSubRegionLabel('triceps_long')}</title></rect>
+          <!-- Triceps Lateral Head (Outer) -->
+          <rect onclick="handleBodyZoneTap('triceps_lateral')" x="33" y="63" width="5.5" height="22" rx="2.5" fill="${getRegionFill('triceps_lateral', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_lateral', missingSubRegions)}"><title>${getSubRegionLabel('triceps_lateral')}</title></rect>
+          <rect onclick="handleBodyZoneTap('triceps_lateral')" x="111.5" y="63" width="5.5" height="22" rx="2.5" fill="${getRegionFill('triceps_lateral', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_lateral', missingSubRegions)}"><title>${getSubRegionLabel('triceps_lateral')}</title></rect>
+          <!-- Triceps Medial Head (Lower) -->
+          <rect onclick="handleBodyZoneTap('triceps_medial')" x="34" y="86" width="10" height="10" rx="2.5" fill="${getRegionFill('triceps_medial', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_medial', missingSubRegions)}"><title>${getSubRegionLabel('triceps_medial')}</title></rect>
+          <rect onclick="handleBodyZoneTap('triceps_medial')" x="106" y="86" width="10" height="10" rx="2.5" fill="${getRegionFill('triceps_medial', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('triceps_medial', missingSubRegions)}"><title>${getSubRegionLabel('triceps_medial')}</title></rect>
+          <!-- Glutes -->
+          <path onclick="handleBodyZoneTap('legs_glutes')" d="M52 114 L74 114 L74 139 L51 134 Z M76 114 L98 114 L99 134 L76 139 Z" fill="${getRegionFill('legs_glutes', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_glutes', missingSubRegions)}"><title>${getSubRegionLabel('legs_glutes')}</title></path>
+          <!-- Hamstrings -->
+          <path onclick="handleBodyZoneTap('legs_hamstrings')" d="M52 142 L72 142 L70 188 L54 188 Z M78 142 L98 142 L96 188 L80 188 Z" fill="${getRegionFill('legs_hamstrings', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_hamstrings', missingSubRegions)}"><title>${getSubRegionLabel('legs_hamstrings')}</title></path>
+          <!-- Calves Back -->
+          <path onclick="handleBodyZoneTap('legs_calves')" d="M54 192 L69 192 L67 244 L56 244 Z M81 192 L96 192 L94 244 L83 244 Z" fill="${getRegionFill('legs_calves', coveredSubRegions, missingSubRegions)}" class="${getRegionClass('legs_calves', missingSubRegions)}"><title>${getSubRegionLabel('legs_calves')}</title></path>
+        </svg>
+      `;
+// ... existing code ... -->
+      const exercises = exerciseIds.map(exId => {
+        const meta = getExerciseMeta(exId);
+        const approved = state.approvedTargets ? state.approvedTargets[exId] : null;
+        const presc = prescriptions.find(p => p.exercise.id === exId);
+
+        let w = meta.usesUserBw ? 0 : (meta.category === 'Smith Machine' ? Math.max(smithConfig.barWeight, 20) : 20);
+        let r = meta.repRange ? meta.repRange[0] : 8;
+        let note = `${currentLang === 'sv' ? 'Baslinje' : 'Baseline'}: 3 × ${r} reps`;
+        let hasConfirmedTarget = false;
+
+        if (approved && typeof approved.weight === 'number') {
+          w = approved.weight;
+          r = approved.reps || r;
+          note = approved.note || `${currentLang === 'sv' ? 'Bekräftat mål' : 'Confirmed Target'}: ${w} kg × ${r} reps`;
+          hasConfirmedTarget = true;
+        } else if (presc) {
+          w = presc.targetWeight;
+          note = `${currentLang === 'sv' ? 'Mål' : 'Target'}: ${presc.targetWeight} kg × ${presc.targetRepsText}`;
+        }
+
+        const p = meta.defaultPauseSec || 0;
+
+        return {
+          exerciseId: exId,
+          supersetGroup: null,
+          isCollapsed: false,
+          hasConfirmedTarget,
+          targetNote: note,
+          sets: [
+            { weight: w, reps: r, pauseSec: p, rpe: 8, type: 'working', completed: false },
+            { weight: w, reps: r, pauseSec: p, rpe: 8.5, type: 'working', completed: false },
+            { weight: w, reps: r, pauseSec: p, rpe: 9, type: 'working', completed: false }
+          ]
+        };
+      });
+// ... existing code ... -->
+    // ==================== COLLAPSIBLE EXERCISE CARDS ====================
+    function toggleExerciseCollapse(exIdx) {
+      const exEntry = state.activeSession.exercises[exIdx];
+      if (!exEntry) return;
+      exEntry.isCollapsed = !exEntry.isCollapsed;
+      saveState();
+      renderActiveExercises();
+    }
+
+    function toggleCollapseAllExercises() {
+      if (!state.activeSession || !state.activeSession.exercises.length) return;
+      const anyExpanded = state.activeSession.exercises.some(e => !e.isCollapsed);
+      state.activeSession.exercises.forEach(e => { e.isCollapsed = anyExpanded; });
+      saveState();
+      renderActiveExercises();
+    }
+
+    // ==================== REPLACE OCCUPIED EXERCISE / MACHINE ====================
+    function openReplaceExerciseModal(exIdx) {
+      replaceTargetExIdx = exIdx;
+      const exEntry = state.activeSession.exercises[exIdx];
+      if (!exEntry) return;
+      const meta = getExerciseMeta(exEntry.exerciseId);
+
+      document.getElementById('replace-modal-title').textContent = `${currentLang === 'sv' ? 'Ersätt' : 'Replace'}: ${getExerciseDisplayName(meta)}`;
+      document.getElementById('replace-modal-sub').textContent = `${getSubRegionLabel(meta.subRegion)} • ${meta.muscle}`;
+
+      const tier1 = state.exercises.filter(e => e.id !== meta.id && e.subRegion === meta.subRegion);
+      const tier2 = state.exercises.filter(e => e.id !== meta.id && e.muscle === meta.muscle && e.subRegion !== meta.subRegion);
+
+      const renderOptionBtn = (cand) => `
+        <button type="button" onclick="confirmReplaceExercise('${cand.id}')" class="p-3 rounded-2xl themed-sub border hover:border-emerald-400 text-left flex items-center gap-3 transition">
+          ${getCloseUpMuscleSvg(cand.subRegion, 'w-14 h-14')}
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-extrabold truncate">${getExerciseDisplayName(cand)}</div>
+            <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+              ${getEquipmentBadgeHtml(cand.category)}
+              <span class="text-[10px] font-bold themed-accent-text truncate">${getSubRegionLabel(cand.subRegion)}</span>
+            </div>
+          </div>
+          <i data-lucide="arrow-right-left" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+        </button>
+      `;
+
+      document.getElementById('replace-tier1-grid').innerHTML = tier1.length
+        ? tier1.map(renderOptionBtn).join('')
+        : `<p class="text-xs themed-muted col-span-full">${currentLang === 'sv' ? 'Inga andra övningar för exakt samma muskelhuvud.' : 'No other exercises for exact same muscle head.'}</p>`;
+
+      document.getElementById('replace-tier2-grid').innerHTML = tier2.length
+        ? tier2.map(renderOptionBtn).join('')
+        : `<p class="text-xs themed-muted col-span-full">${currentLang === 'sv' ? 'Inga fler övningar i muskelgruppen.' : 'No other exercises in this muscle group.'}</p>`;
+
+      document.getElementById('replace-exercise-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeReplaceModal() {
+      replaceTargetExIdx = null;
+      document.getElementById('replace-exercise-modal').classList.add('hidden');
+    }
+
+    function confirmReplaceExercise(newExId) {
+      if (replaceTargetExIdx === null || !state.activeSession) return;
+      const oldEntry = state.activeSession.exercises[replaceTargetExIdx];
+      const newMeta = getExerciseMeta(newExId);
+      const approved = state.approvedTargets ? state.approvedTargets[newExId] : null;
+      const stats = getExerciseStats(newExId, 'all');
+
+      let defaultW = newMeta.usesUserBw ? 0 : (newMeta.category === 'Smith Machine' ? Math.max(smithConfig.barWeight, 20) : 20);
+      let defaultR = newMeta.repRange ? newMeta.repRange[0] : 8;
+      let note = `${currentLang === 'sv' ? 'Ersatt övning' : 'Replaced exercise'}: ${getSubRegionLabel(newMeta.subRegion)}`;
+      let hasConfirmedTarget = false;
+
+      if (approved && typeof approved.weight === 'number') {
+        defaultW = approved.weight;
+        defaultR = approved.reps || defaultR;
+        note = approved.note || `${currentLang === 'sv' ? 'Bekräftat mål' : 'Confirmed Target'}: ${defaultW} kg × ${defaultR}`;
+        hasConfirmedTarget = true;
+      } else if (stats.bestWorkingWeight > 0) {
+        defaultW = stats.bestWorkingWeight;
+        defaultR = stats.bestWorkingReps || defaultR;
+        note = `${currentLang === 'sv' ? 'Tidigare bästa' : 'Previous best'}: ${defaultW} kg × ${defaultR}`;
+      }
+
+      oldEntry.exerciseId = newExId;
+      oldEntry.hasConfirmedTarget = hasConfirmedTarget;
+      oldEntry.targetNote = note;
+      oldEntry.rpeAlertDismissed = false;
+      oldEntry.sets = oldEntry.sets.map(s => ({
+        ...s,
+        weight: s.completed ? s.weight : defaultW,
+        reps: s.completed ? s.reps : defaultR,
+        pauseSec: newMeta.defaultPauseSec || 0
+      }));
+
+      saveState();
+      closeReplaceModal();
+      renderAnatomyAndCompletionPanel();
+      renderActiveExercises();
+      showToast(`${currentLang === 'sv' ? 'Bytte till' : 'Swapped to'}: ${getExerciseDisplayName(newMeta)}`);
+    }
+
+    function renderActiveExercises() {
+      const container = document.getElementById('active-exercises-container');
+      if (!state.activeSession || state.activeSession.exercises.length === 0) {
+        container.innerHTML = `<div class="themed-card border rounded-2xl p-8 text-center text-xs themed-muted">${currentLang === 'sv' ? 'Inga övningar tillagda ännu. Välj en nedan.' : 'No exercises added yet. Pick one below.'}</div>`;
+        return;
+      }
+
+      const anyExpanded = state.activeSession.exercises.some(e => !e.isCollapsed);
+      const colAllLbl = document.getElementById('collapse-all-label');
+      if (colAllLbl) colAllLbl.textContent = anyExpanded ? t('collapseAllBtn') : t('expandAllBtn');
+
+      const totalEx = state.activeSession.exercises.length;
+      container.innerHTML = state.activeSession.exercises.map((exEntry, exIdx) => {
+        const meta = getExerciseMeta(exEntry.exerciseId);
+        const completedCount = exEntry.sets.filter(s => s.completed).length;
+        const totalSetsCount = exEntry.sets.length;
+        const firstWork = exEntry.sets.find(s => s.type !== 'warmup') || exEntry.sets[0] || { weight: 0, reps: 0 };
+
+        // COLLAPSED COMPACT VIEW
+        if (exEntry.isCollapsed) {
+          return `
+            <div draggable="true" ondragstart="handleExDragStart(event, ${exIdx})" ondragover="handleExDragOver(event)" ondrop="handleExDrop(event, ${exIdx})" ondragend="handleExDragEnd(event)" class="themed-card border ${completedCount === totalSetsCount && totalSetsCount > 0 ? 'border-emerald-500/45' : ''} rounded-2xl p-3 flex items-center justify-between gap-2 transition">
+              <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <div class="cursor-grab active:cursor-grabbing p-1 rounded themed-sub themed-muted shrink-0">
+                  <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+                </div>
+                ${getCloseUpMuscleSvg(meta.subRegion, 'w-11 h-11')}
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-[11px] font-mono font-extrabold themed-muted">#${exIdx + 1}</span>
+                    <h3 class="text-xs sm:text-sm font-extrabold truncate">${getExerciseDisplayName(meta)}</h3>
+                    <span class="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full ${completedCount === totalSetsCount && totalSetsCount > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'themed-sub'}">
+                      ${completedCount}/${totalSetsCount} set
+                    </span>
+                  </div>
+                  <div class="text-[11px] themed-muted truncate mt-0.5">
+                    ${getSubRegionLabel(meta.subRegion)} &bull; <span class="font-mono font-bold">${meta.usesUserBw ? '+' : ''}${firstWork.weight} kg &times; ${firstWork.reps}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="openReplaceExerciseModal(${exIdx})" class="px-2.5 py-2 rounded-xl themed-sub border text-[11px] font-bold flex items-center gap-1 hover:border-amber-400" title="${t('replaceBtn')}">
+                  <i data-lucide="arrow-right-left" class="w-3.5 h-3.5 text-amber-400"></i>
+                </button>
+                <button type="button" onclick="toggleExerciseCollapse(${exIdx})" class="p-2 rounded-xl themed-accent-bg text-xs font-extrabold flex items-center gap-1" title="Expand">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        const isSmith = meta.category === 'Smith Machine';
+        const nextEx = state.activeSession.exercises[exIdx + 1];
+        const isSupersetLinkedNext = Boolean(exEntry.supersetGroup && nextEx && nextEx.supersetGroup === exEntry.supersetGroup);
+// ... existing code ... -->
+        return `
+          <div draggable="true" ondragstart="handleExDragStart(event, ${exIdx})" ondragover="handleExDragOver(event)" ondrop="handleExDrop(event, ${exIdx})" ondragend="handleExDragEnd(event)" class="themed-card border ${exEntry.supersetGroup ? 'border-violet-500/50' : ''} rounded-2xl p-4 space-y-3 transition">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+              <div class="flex items-start gap-2.5 min-w-0">
+                <!-- Drag Handle + Up/Down Reorder Controls -->
+                <div class="flex flex-col items-center gap-0.5 shrink-0 pt-0.5">
+                  <div class="cursor-grab active:cursor-grabbing p-1 rounded themed-sub themed-muted" title="Drag to reorder">
+                    <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
+                  </div>
+                  <div class="flex items-center gap-0.5">
+                    <button type="button" onclick="moveExerciseInSession(${exIdx}, ${exIdx - 1})" ${exIdx === 0 ? 'disabled' : ''} class="p-1 rounded themed-sub disabled:opacity-30 text-[10px]">
+                      <i data-lucide="chevron-up" class="w-3 h-3"></i>
+                    </button>
+                    <button type="button" onclick="moveExerciseInSession(${exIdx}, ${exIdx + 1})" ${exIdx === totalEx - 1 ? 'disabled' : ''} class="p-1 rounded themed-sub disabled:opacity-30 text-[10px]">
+                      <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- High-Clarity Close-Up Anatomical Muscle Head SVG -->
+                ${getCloseUpMuscleSvg(meta.subRegion)}
+
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-[11px] font-mono font-extrabold themed-muted">#${exIdx + 1}</span>
+                    <h3 class="text-sm font-extrabold">${getExerciseDisplayName(meta)}</h3>
+                    ${getEquipmentBadgeHtml(meta.category)}
+                    ${exEntry.hasConfirmedTarget ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">&check; ${currentLang === 'sv' ? 'Bekräftat mål' : 'Confirmed Target'}</span>` : ''}
+                    ${exEntry.supersetGroup ? `<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40">SUPERSET</span>` : ''}
+                  </div>
+                  <div class="text-xs font-extrabold themed-accent-text mt-0.5">${getSubRegionLabel(meta.subRegion)}</div>
+                  <p class="text-[11px] themed-muted mt-0.5">${exEntry.targetNote || ''}</p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                <button type="button" onclick="openReplaceExerciseModal(${exIdx})" class="px-2.5 py-1.5 rounded-xl themed-sub border border-amber-500/35 text-amber-400 text-[11px] font-extrabold flex items-center gap-1 hover:bg-amber-500/15">
+                  <i data-lucide="arrow-right-left" class="w-3.5 h-3.5"></i> ${t('replaceBtn')}
+                </button>
+                <button type="button" onclick="generateWarmupRamp(${exIdx})" class="px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-400 text-[11px] font-extrabold flex items-center gap-1">
+                  <i data-lucide="flame" class="w-3.5 h-3.5"></i> ${t('warmupBtn')}
+                </button>
+                ${nextEx ? `
+                  <button type="button" onclick="toggleSupersetWithNext(${exIdx})" class="px-2.5 py-1.5 rounded-xl ${isSupersetLinkedNext ? 'bg-violet-500/25 border-violet-400 text-violet-300' : 'themed-sub'} border text-[11px] font-bold flex items-center gap-1">
+                    <i data-lucide="link" class="w-3 h-3"></i> ${isSupersetLinkedNext ? t('unlinkSupersetBtn') : t('linkSupersetBtn')}
+                  </button>
+                ` : ''}
+                <button type="button" onclick="toggleExerciseCollapse(${exIdx})" class="p-1.5 rounded-xl themed-sub themed-muted hover:text-white" title="Minimera övning">
+                  <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="removeExerciseFromSession(${exIdx})" class="p-1.5 rounded-xl themed-sub themed-muted hover:text-rose-400">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+// ... existing code ... -->
+    function addExerciseToSession(exId) {
+      const meta = getExerciseMeta(exId);
+      const approved = state.approvedTargets ? state.approvedTargets[exId] : null;
+      let w = meta.usesUserBw ? 0 : (meta.category === 'Smith Machine' ? Math.max(smithConfig.barWeight, 20) : 20);
+      let r = meta.repRange ? meta.repRange[0] : 8;
+      let note = `${currentLang === 'sv' ? 'Baslinje' : 'Baseline'}: 3 × ${r} reps`;
+      let hasConfirmedTarget = false;
+
+      if (approved && typeof approved.weight === 'number') {
+        w = approved.weight;
+        r = approved.reps || r;
+        note = approved.note || `${currentLang === 'sv' ? 'Bekräftat mål' : 'Confirmed Target'}: ${w} kg × ${r} reps`;
+        hasConfirmedTarget = true;
+      }
+
+      state.activeSession.exercises.push({
+        exerciseId: exId,
+        supersetGroup: null,
+        isCollapsed: false,
+        hasConfirmedTarget,
+        targetNote: note,
+        sets: [
+          { weight: w, reps: r, pauseSec: meta.defaultPauseSec || 0, rpe: 8, type: 'working', completed: false },
+          { weight: w, reps: r, pauseSec: meta.defaultPauseSec || 0, rpe: 8.5, type: 'working', completed: false },
+          { weight: w, reps: r, pauseSec: meta.defaultPauseSec || 0, rpe: 9, type: 'working', completed: false }
+        ]
+      });
+      saveState();
+      renderAnatomyAndCompletionPanel();
+      renderActiveExercises();
+    }
+
+    function discardSession() {
+      state.activeSession = null;
+      saveState();
+      dismissSmartRestOverlay();
+      renderLoggerView();
+    }
+
+    function finishSession() {
+      if (!state.activeSession || state.activeSession.exercises.length === 0) {
+        showToast(currentLang === 'sv' ? 'Lägg till minst en övning först.' : 'Add at least one exercise first.');
+        return;
+      }
+      const completedWorkout = JSON.parse(JSON.stringify(state.activeSession));
+      const wasTrial = Boolean(completedWorkout.isTrial);
+      state.workouts.push(completedWorkout);
+      state.activeSession = null;
+      saveState();
+      dismissSmartRestOverlay();
+
+      if (wasTrial) {
+        showToast(currentLang === 'sv' ? 'Testpass sparat i sandlådan (riktiga PR orörda).' : 'Trial saved to Sandbox Log (real stats untouched).');
+        switchTab('history');
+      } else {
+        openPostWorkoutProgressionModal(completedWorkout);
+      }
+    }
+
+    // ==================== POST-WORKOUT PROGRESSION REVIEW MODAL ====================
+    function buildProgressionProposalsForWorkout(workout) {
+      const proposals = [];
+      (workout.exercises || []).forEach(exEntry => {
+        const meta = getExerciseMeta(exEntry.exerciseId);
+        const workingSets = (exEntry.sets || []).filter(s => s.type !== 'warmup' && (Number(s.reps) || 0) > 0);
+        if (workingSets.length === 0) return;
+
+        // Best set from today's workout
+        const bestSet = workingSets.reduce((best, curr) => {
+          const scoreCurr = (Number(curr.weight) || 0) * 100 + (Number(curr.reps) || 0);
+          const scoreBest = (Number(best.weight) || 0) * 100 + (Number(best.reps) || 0);
+          return scoreCurr >= scoreBest ? curr : best;
+        }, workingSets[0]);
+
+        const curW = Number(bestSet.weight) || 0;
+        const curR = Number(bestSet.reps) || 8;
+        const avgRpe = workingSets.reduce((acc, s) => acc + (Number(s.rpe) || 8), 0) / workingSets.length;
+        const repMin = meta.repRange ? meta.repRange[0] : 8;
+        const repMax = meta.repRange ? meta.repRange[1] : 10;
+
+        let nextW = curW;
+        let nextR = curR;
+        let reasonSv = '';
+        let reasonEn = '';
+
+        if (curR >= repMax && avgRpe <= 8.5) {
+          nextW = Math.round((curW + 2.5) * 2) / 2;
+          nextR = repMin;
+          reasonSv = `Toppen av rep-intervallet nådd (@RPE ${avgRpe.toFixed(1)}) → Höj vikten +2.5 kg och börja på ${repMin} reps.`;
+          reasonEn = `Top of rep range achieved (@RPE ${avgRpe.toFixed(1)}) → Increase load +2.5 kg and reset to ${repMin} reps.`;
+        } else if (avgRpe <= 9.0) {
+          nextW = curW;
+          nextR = Math.min(repMax, curR + 1);
+          reasonSv = `Bra kontroll (@RPE ${avgRpe.toFixed(1)}) → Behåll ${curW} kg och sikta på +1 rep (${nextR} reps).`;
+          reasonEn = `Solid control (@RPE ${avgRpe.toFixed(1)}) → Keep ${curW} kg and push for +1 rep (${nextR} reps).`;
+        } else if (avgRpe >= 9.8 && curR < repMin) {
+          nextW = Math.max(0, Math.round((curW - 2.5) * 2) / 2);
+          nextR = repMin;
+          reasonSv = `Mycket hög utmattning (@RPE ${avgRpe.toFixed(1)}) → Sänk -2.5 kg för ren teknik och ${repMin} reps.`;
+          reasonEn = `Maximal fatigue (@RPE ${avgRpe.toFixed(1)}) → Drop -2.5 kg to rebuild clean reps at ${repMin}.`;
+        } else {
+          nextW = curW;
+          nextR = curR;
+          reasonSv = `Hög ansträngning (@RPE ${avgRpe.toFixed(1)}) → Konsolidera samma vikt och reps nästa pass.`;
+          reasonEn = `High effort (@RPE ${avgRpe.toFixed(1)}) → Consolidate same weight & reps next session.`;
+        }
+
+        proposals.push({
+          exerciseId: meta.id,
+          meta,
+          todayWeight: curW,
+          todayReps: curR,
+          avgRpe: avgRpe.toFixed(1),
+          proposedWeight: nextW,
+          proposedReps: nextR,
+          reasonSv,
+          reasonEn,
+          status: 'pending' // 'pending' | 'confirmed' | 'rejected'
+        });
+      });
+      return proposals;
+    }
+
+    function openPostWorkoutProgressionModal(workout) {
+      pendingProgressionProposals = buildProgressionProposalsForWorkout(workout);
+      if (pendingProgressionProposals.length === 0) {
+        showToast(currentLang === 'sv' ? 'Träningspass sparat!' : 'Workout saved!');
+        switchTab('dashboard');
+        return;
+      }
+      renderProgressionReviewList();
+      document.getElementById('progression-review-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function renderProgressionReviewList() {
+      const listEl = document.getElementById('progression-review-list');
+      listEl.innerHTML = pendingProgressionProposals.map((item, idx) => {
+        const isConfirmed = item.status === 'confirmed';
+        const isRejected = item.status === 'rejected';
+        const borderClass = isConfirmed ? 'border-emerald-500/60 bg-emerald-500/10' : isRejected ? 'border-rose-500/40 opacity-60' : 'themed-sub';
+
+        return `
+          <div class="p-4 rounded-2xl border ${borderClass} space-y-3 transition">
+            <div class="flex items-start justify-between gap-2.5">
+              <div class="flex items-center gap-2.5 min-w-0">
+                ${getCloseUpMuscleSvg(item.meta.subRegion, 'w-14 h-14')}
+                <div class="min-w-0">
+                  <h4 class="text-sm font-extrabold truncate">${getExerciseDisplayName(item.meta)}</h4>
+                  <p class="text-[11px] themed-muted mt-0.5">${currentLang === 'sv' ? item.reasonSv : item.reasonEn}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl themed-card border">
+                <span class="block text-[10px] uppercase font-bold themed-muted">${currentLang === 'sv' ? 'Dagens Bästa' : "Today's Best"}</span>
+                <span class="font-mono font-extrabold text-sm">${item.meta.usesUserBw ? '+' : ''}${item.todayWeight} kg &times; ${item.todayReps}</span>
+                <span class="block text-[10px] themed-muted font-mono">@RPE ${item.avgRpe}</span>
+              </div>
+              <div class="p-2.5 rounded-xl themed-card border border-blue-500/35">
+                <span class="block text-[10px] uppercase font-bold themed-accent-text">${currentLang === 'sv' ? 'Förslag Nästa Gång' : 'Proposed Next'}</span>
+                <span class="font-mono font-extrabold text-sm themed-accent-text">${item.meta.usesUserBw ? '+' : ''}${item.proposedWeight} kg &times; ${item.proposedReps}</span>
+                <span class="block text-[10px] themed-muted">${isConfirmed ? (currentLang === 'sv' ? 'Sparad som mål!' : 'Saved as target!') : ''}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+              <button type="button" onclick="setProposalDecision(${idx}, 'rejected')" class="px-3.5 py-2 rounded-xl border text-xs font-extrabold flex items-center gap-1 transition ${isRejected ? 'bg-rose-500 text-white border-rose-500' : 'themed-card hover:text-rose-400'}">
+                <i data-lucide="x" class="w-3.5 h-3.5"></i> ${currentLang === 'sv' ? 'Neka' : 'Reject'}
+              </button>
+              <button type="button" onclick="setProposalDecision(${idx}, 'confirmed')" class="px-4 py-2 rounded-xl border text-xs font-extrabold flex items-center gap-1 transition ${isConfirmed ? 'bg-emerald-500 text-slate-950 border-emerald-500 shadow-md' : 'themed-card text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/15'}">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i> ${currentLang === 'sv' ? 'Bekräfta' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function setProposalDecision(idx, decision) {
+      const item = pendingProgressionProposals[idx];
+      if (!item) return;
+      item.status = decision;
+
+      if (decision === 'confirmed') {
+        state.approvedTargets[item.exerciseId] = {
+          weight: item.proposedWeight,
+          reps: item.proposedReps,
+          note: `${currentLang === 'sv' ? 'Bekräftat mål' : 'Confirmed Target'}: ${item.proposedWeight} kg × ${item.proposedReps} reps`,
+          approvedAt: new Date().toISOString().slice(0, 10)
+        };
+      } else if (decision === 'rejected') {
+        delete state.approvedTargets[item.exerciseId];
+      }
+      saveState();
+      renderProgressionReviewList();
+    }
+
+    function confirmAllProgressionProposals() {
+      pendingProgressionProposals.forEach((_, idx) => setProposalDecision(idx, 'confirmed'));
+      showToast(currentLang === 'sv' ? 'Alla förslag bekräftade inför nästa pass!' : 'All proposals confirmed for next session!');
+    }
+
+    function closeProgressionReviewModal() {
+      document.getElementById('progression-review-modal').classList.add('hidden');
+      switchTab('dashboard');
+    }
+
+    // ==================== FULL-SCREEN WEIGHT- & REP-CORRELATED SMART REST TIMER ====================
+    function calculateSmartRestDuration(exMeta, setObj) {
+// ... existing code ... -->
+    function startSmartRestCountdown(seconds, context) {
+      clearInterval(restTimerInterval);
+      restTotalSec = seconds;
+      restRemainingSec = seconds;
+      restPaused = false;
+      restMinimized = false;
+
+      const overlay = document.getElementById('smart-rest-overlay');
+      const card = document.getElementById('smart-rest-card');
+      const miniPill = document.getElementById('smart-rest-mini-pill');
+      const isTrial = Boolean(state.activeSession && state.activeSession.isTrial);
+
+      miniPill.classList.add('hidden');
+      overlay.classList.remove('hidden');
+      card.classList.remove('animate-pulse');
+      card.classList.toggle('border-amber-400', isTrial);
+      card.classList.toggle('border-emerald-500/50', !isTrial);
+
+      document.getElementById('smart-rest-status-badge').textContent = currentLang === 'sv' ? 'Smart Vila' : 'Smart Rest';
+      document.getElementById('smart-rest-trial-badge').classList.toggle('hidden', !isTrial);
+      document.getElementById('smart-rest-exercise').textContent = context.label || 'Recovery Timer';
+      document.getElementById('smart-rest-set-summary').textContent = context.summary || '';
+      document.getElementById('smart-rest-rationale').textContent = context.rationale || '';
+      document.getElementById('rest-pause-btn').textContent = currentLang === 'sv' ? 'Pausa' : 'Pause';
+
+      updateSmartRestDisplay();
+
+      restTimerInterval = setInterval(() => {
+        if (restPaused) return;
+        restRemainingSec--;
+        updateSmartRestDisplay();
+        if (restRemainingSec <= 0) {
+          clearInterval(restTimerInterval);
+          if (restMinimized) expandSmartRestFromPill();
+          card.classList.add('animate-pulse');
+          document.getElementById('smart-rest-status-badge').textContent = currentLang === 'sv' ? 'Redo för nästa set!' : 'Ready for Next Set!';
+          playRestCompletionBeep();
+        }
+      }, 1000);
+    }
+
+    function updateSmartRestDisplay() {
+      const m = String(Math.floor(Math.max(0, restRemainingSec) / 60)).padStart(2, '0');
+      const s = String(Math.max(0, restRemainingSec) % 60).padStart(2, '0');
+      const formatted = `${m}:${s}`;
+      document.getElementById('smart-rest-time').textContent = formatted;
+      document.getElementById('smart-rest-mini-time').textContent = formatted;
+
+      const circumference = 603.2;
+      const ratio = restTotalSec > 0 ? Math.max(0, restRemainingSec / restTotalSec) : 0;
+      document.getElementById('smart-rest-ring').style.strokeDashoffset = circumference * (1 - ratio);
+    }
+
+    function minimizeSmartRestToPill() {
+      restMinimized = true;
+      document.getElementById('smart-rest-overlay').classList.add('hidden');
+      document.getElementById('smart-rest-mini-pill').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function expandSmartRestFromPill() {
+      restMinimized = false;
+      document.getElementById('smart-rest-mini-pill').classList.add('hidden');
+      document.getElementById('smart-rest-overlay').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function adjustSmartRest(delta) {
+// ... existing code ... -->
+    function dismissSmartRestOverlay() {
+      clearInterval(restTimerInterval);
+      restMinimized = false;
+      document.getElementById('smart-rest-overlay').classList.add('hidden');
+      document.getElementById('smart-rest-mini-pill').classList.add('hidden');
+    }
+// ... existing code ... -->
+    function saveWorkoutAsTemplateById(workoutId) {
+      const w = state.workouts.find(item => item.id === workoutId);
+      if (!w || !w.exercises || w.exercises.length === 0) return;
+      pendingTemplateExerciseIds = w.exercises.map(e => e.exerciseId);
+      document.getElementById('template-name-input').value = w.name || 'Custom Split';
+      document.getElementById('template-name-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTemplateNameModal() {
+      pendingTemplateExerciseIds = [];
+      document.getElementById('template-name-modal').classList.add('hidden');
+    }
+
+    function confirmSaveTemplateModal() {
+      const name = (document.getElementById('template-name-input').value || 'Custom Split').trim();
+      if (pendingTemplateExerciseIds.length > 0) {
+        state.customTemplates.push({
+          id: 'tpl_' + Date.now(),
+          name,
+          exerciseIds: [...pendingTemplateExerciseIds]
+        });
+        saveState();
+        showToast(currentLang === 'sv' ? `Mall sparad: "${name}"` : `Saved template: "${name}"`);
+      }
+      closeTemplateNameModal();
+    }
+
+    function renderHistoryView() {
+// ... existing code ... -->
+              <div class="flex items-center gap-1.5">
+                <button onclick="saveWorkoutAsTemplateById('${w.id}')" class="px-2.5 py-1.5 rounded-xl themed-sub border border-emerald-500/35 text-[11px] font-extrabold text-emerald-400 flex items-center gap-1 hover:bg-emerald-500/15">
+                  <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i> ${t('saveTemplateBtn')}
+                </button>
+                ${isTrial ? `<button onclick="promoteTrialToReal('${w.id}')" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/35 text-[11px] font-extrabold text-emerald-400">${currentLang === 'sv' ? 'Gör till riktigt pass' : 'Promote to Real'}</button>` : ''}
+                <button onclick="deleteWorkout('${w.id}')" class="p-2 rounded-xl themed-sub hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+// ... existing code ... -->
+    // ==================== BOOTSTRAP ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAllState();
+      if (state.activeSession && Array.isArray(state.activeSession.exercises)) {
+        switchTab('logger');
+        showToast(currentLang === 'sv' ? 'Återställde ditt pågående träningspass!' : 'Restored your unfinished workout session!');
+      } else {
+        switchTab('dashboard');
+      }
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
